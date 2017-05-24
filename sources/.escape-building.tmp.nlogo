@@ -1,11 +1,23 @@
 
 to setup
+  clear-all
+  reset-ticks
+
+
 
 end
 
+
+to go
+
+
+end
+
+
+
 to import-from-file
   let file-name ""
-  set file-name user-input "Name of file with map"
+  set file-name read-from-user-input "Name of file with map"
 
   let filepath (word "./maps/" file-name ".csv")
   ifelse user-yes-or-no? (word "Load File: " filepath
@@ -19,21 +31,6 @@ to import-from-file
   [ user-message "Import Canceled. File not found." ]
 end
 
-
-to export-to-file
-  let file-name ""
-  set file-name user-input "Name of file to export"
-
-  let filepath (word "./maps/" file-name ".csv")
-  ifelse user-yes-or-no? (word "File will be saved to: " filepath
-     "\nIf this file already exists, it will be overwritten.\nAre you sure you want to save?")
-  [
-    export-world filepath
-    user-message "File Saved."
-  ]
-  [ user-message "Export Canceled. File not saved." ]
-
-end
 @#$#@#$#@
 GRAPHICS-WINDOW
 210
@@ -63,29 +60,12 @@ ticks
 30.0
 
 BUTTON
-101
-33
-170
-66
+54
+72
+123
+105
 Import
 import-from-file
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-12
-32
-81
-65
-Export
-export-to-file
 NIL
 1
 T

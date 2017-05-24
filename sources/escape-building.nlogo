@@ -1,10 +1,7 @@
 
-
 to setup
   clear-all
   reset-ticks
-
-  setup-walls
 
 
 
@@ -16,6 +13,23 @@ to go
 
 end
 
+
+
+to import-from-file
+  let file-name ""
+  set file-name user-input "Name of file with map"
+
+  let filepath (word "./maps/" file-name ".csv")
+  ifelse user-yes-or-no? (word "Load File: " filepath
+         "\nThis will clear your current map and replace it with the map loaded."
+         "\nAre you sure you want to Load?")
+  [
+    import-world filepath
+
+    user-message "Map imported."
+  ]
+  [ user-message "Import Canceled. File not found." ]
+end
 
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -44,6 +58,23 @@ GRAPHICS-WINDOW
 1
 ticks
 30.0
+
+BUTTON
+54
+72
+123
+105
+Import
+import-from-file
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
