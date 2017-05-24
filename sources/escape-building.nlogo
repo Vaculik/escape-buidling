@@ -1,4 +1,7 @@
-breed [people person]
+globals
+[
+ current-tool door-orientation ;; variables needed to be compatible with editor (import without errors)
+]
 
 to setup
   clear-all
@@ -15,7 +18,6 @@ to go
 end
 
 to setup-people
-  create-people persons
 
 end
 
@@ -36,13 +38,12 @@ to import-from-file
   ]
   [ user-message "Import Canceled. File not found." ]
 end
-
 @#$#@#$#@
 GRAPHICS-WINDOW
 210
 10
-647
-448
+1063
+864
 -1
 -1
 13.0
@@ -55,10 +56,10 @@ GRAPHICS-WINDOW
 1
 1
 1
--16
-16
--16
-16
+-32
+32
+-32
+32
 0
 0
 1
@@ -87,8 +88,8 @@ SLIDER
 87
 204
 120
-persons
-persons
+people
+people
 0
 100
 40.0
@@ -456,7 +457,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.0
+NetLogo 6.0.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
