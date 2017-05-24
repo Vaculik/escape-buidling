@@ -1,22 +1,4 @@
 
-
-to setup
-  clear-all
-  reset-ticks
-
-  setup-walls
-
-
-
-end
-
-
-to go
-
-
-end
-
-
 @#$#@#$#@
 GRAPHICS-WINDOW
 210
