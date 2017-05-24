@@ -1,33 +1,129 @@
+globals
+[
+  current-tool
+]
 
-to draw
-  if mouse-down?
-  [
-    ;; Erase
-    if tools = "Eraser"
-    [ erase ]
-    ;; Wall Tool - Draws a Wall - Neither Pac-Man nor Ghosts can move through walls
-    if tools = "Wall"
-    [ draw-boundary blue ]
-    if tools = "Door"
-    [ draw-boundary green ]
-  ]
 
-end
-
-to erase
-  ask patch (round mouse-xcor) (round mouse-ycor)
+;; clear - set all patches to black
+to clear
+  ask patches
   [
     set pcolor black
   ]
 end
 
+;;draw - draw boundary based on selected tool
+to draw
+  if mouse-down?
+  [
+    ;; Wall Tool
+    if current-tool = "Erase"
+    [ erase ]
+    ;; Wall Tool
+    if current-tool = "Wall"
+    [ draw-boundary blue ]
+    ;; Exit Sign Door - door with exit sign (this door should always lead closer to exit for this model to work properly)
+    if current-tool = "Exit Sign Door"
+    [ draw-exit-sign-door ]
+    ;; Exit - Final exit door that leads outside the building
+    if current-tool = "Exit"
+    [ draw-boundary yellow ]
+    ;; Normal Door
+    if current-tool = "Normal Door"
+    [ draw-boundary red ]
+  ]
+
+end
+
+;;erase - sets patch with mouse coord to black
+to erase
+    ask patch (round mouse-xcor) (round mouse-ycor)
+    [
+      set pcolor black
+    ]
+end
+
+
+to draw-exit-sign-door
+  if door-orientation = "Up"
+  [
+    ask patch (round mouse-xcor) (round mouse-ycor)
+    [
+      set pcolor
+    ]
+
+    ask patch (round mouse-xcor) (round mouse-ycor - 1)
+    [
+      set pcolor red
+    ]
+
+  ]
+
+  if door-orientation = "Down"
+  [
+    ask patch (round mouse-xcor) (round mouse-ycor)
+    [
+      set pcolor red
+    ]
+
+    ask patch (round mouse-xcor) (round mouse-ycor - 1)
+    [
+      set pcolor green
+    ]
+
+  ]
+
+  if door-orientation = "Right"
+  [
+    ask patch (round mouse-xcor) (round mouse-ycor)
+    [
+      set pcolor green
+    ]
+
+    ask patch (round mouse-xcor - 1) (round mouse-ycor)
+    [
+      set pcolor red
+    ]
+  ]
+
+  if door-orientation = "Left"
+  [
+    ask patch (round mouse-xcor) (round mouse-ycor)
+    [
+      set pcolor red
+    ]
+
+    ask patch (round mouse-xcor - 1) (round mouse-ycor)
+    [
+      set pcolor green
+    ]
+  ]
+end
+
+;;draw boundary - sraw boundary based on selected tool
 to draw-boundary [wall-color]
   ask patch (round mouse-xcor) (round mouse-ycor)
   [
    set pcolor wall-color
   ]
+
+  ask patch (round mouse-xcor - 1) (round mouse-ycor - 1)
+  [
+   set pcolor wall-color
+  ]
+
+    ask patch (round mouse-xcor - 1) (round mouse-ycor)
+  [
+   set pcolor wall-color
+  ]
+
+    ask patch (round mouse-xcor) (round mouse-ycor - 1)
+  [
+   set pcolor wall-color
+  ]
 end
 
+;;import from file - map is loaded from ./maps/ and replaces  the current map (user input - filename without extension)
 to import-from-file
   let file-name ""
   set file-name user-input "Name of file with map"
@@ -44,7 +140,7 @@ to import-from-file
   [ user-message "Import Canceled. File not found." ]
 end
 
-
+;;export from file - file is saved in ./maps/ with .cvs extension (user input - filename without extension)
 to export-to-file
   let file-name ""
   set file-name user-input "Name of file to export"
@@ -61,13 +157,13 @@ to export-to-file
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-281
+359
 10
-1134
+1212
 864
 -1
 -1
-13.0
+12.5
 1
 10
 1
@@ -121,22 +217,12 @@ NIL
 NIL
 1
 
-CHOOSER
-15
-96
-153
-141
-tools
-tools
-"Eraser" "Wall" "Door" "Exit Door"
-2
-
 BUTTON
 174
-101
-240
-134
-Draw
+102
+320
+135
+Use Tool (Space)
 draw
 T
 1
@@ -147,6 +233,139 @@ NIL
 NIL
 NIL
 1
+
+BUTTON
+259
+34
+325
+67
+Clear
+clear
+NIL
+1
+T
+OBSERVER
+NIL
+C
+NIL
+NIL
+1
+
+CHOOSER
+155
+267
+293
+312
+door-orientation
+door-orientation
+"Up" "Down" "Right" "Left"
+3
+
+TEXTBOX
+21
+158
+224
+177
+Tools
+13
+0.0
+1
+
+BUTTON
+227
+178
+296
+211
+Erase
+set current-tool \"Erase\"
+NIL
+1
+T
+OBSERVER
+NIL
+E
+NIL
+NIL
+1
+
+BUTTON
+123
+178
+190
+211
+Wall
+set current-tool \"Wall\"
+NIL
+1
+T
+OBSERVER
+NIL
+W
+NIL
+NIL
+1
+
+BUTTON
+20
+226
+134
+259
+Normal Door
+set current-tool \"Normal Door\"
+NIL
+1
+T
+OBSERVER
+NIL
+D
+NIL
+NIL
+1
+
+BUTTON
+21
+273
+145
+306
+Exit Sign Door
+set current-tool \"Exit Sign Door\"
+NIL
+1
+T
+OBSERVER
+NIL
+S
+NIL
+NIL
+1
+
+BUTTON
+21
+178
+84
+211
+Exit
+set current-tool \"Exit\"
+NIL
+1
+T
+OBSERVER
+NIL
+Q
+NIL
+NIL
+1
+
+MONITOR
+20
+97
+159
+142
+Current tool
+current-tool
+17
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
