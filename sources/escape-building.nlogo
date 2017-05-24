@@ -1,15 +1,21 @@
+breed [people person]
 
 to setup
   clear-all
   reset-ticks
 
-
+  setup-people
 
 end
 
 
 to go
 
+
+end
+
+to setup-people
+  create-people persons
 
 end
 
@@ -60,12 +66,44 @@ ticks
 30.0
 
 BUTTON
-54
-72
-123
-105
+106
+24
+175
+57
 Import
 import-from-file
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+SLIDER
+32
+87
+204
+120
+persons
+persons
+0
+100
+40.0
+1
+1
+NIL
+HORIZONTAL
+
+BUTTON
+35
+32
+99
+65
+Setup
+setup
 NIL
 1
 T
