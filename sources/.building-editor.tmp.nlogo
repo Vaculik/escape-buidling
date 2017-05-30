@@ -1,41 +1,129 @@
 globals
 [
- current-tool door-orientation ;; variables needed to be compatible with editor (import without errors)
+  current-tool
 ]
 
-to setup
-  clear-globals
-  clear-ticks
-  clear-turtles
-  clear-drawing
-  clear-all-plots
-  clear-output
-  setup-people
+
+;; clear - set all patches to black
+to clear
+  ask patches
+  [
+    set pcolor black
+  ]
+end
+
+;;draw - draw boundary based on selected tool
+to draw
+  if mouse-down?
+  [
+    ;; Wall Tool
+    if current-tool = "Erase"
+    [ erase ]
+    ;; Wall Tool
+    if current-tool = "Wall"
+    [ draw-boundary blue ]
+    ;; Exit Sign Door - door with exit sign (this door should always lead closer to exit for this model to work properly)
+    if current-tool = "Exit Sign Door"
+    [ draw-exit-sign-door ]
+    ;; Exit - Final exit door that leads outside the building
+    if current-tool = "Exit"
+    [ draw-boundary yellow ]
+    ;; Normal Door
+    if current-tool = "Normal Door"
+    [ draw-boundary red ]
+  ]
 
 end
 
-
-to go
-
-
-end
-
-to setup-people
-  let turtles-remaining people
-  set-default-shape turtles "circle"
-
-    create-turtles turtles-remaining
+;;erase - sets patch with mouse coord to black
+to erase
+    ask patch (round mouse-xcor) (round mouse-ycor)
     [
-      set color white
-      setxy random-xcor random-ycor
+      set pcolor black
+    ]
+end
+
+
+to draw-exit-sign-door
+  if door-orientation = "Up"
+  [
+    ask patch (round mouse-xcor) (round mouse-ycor)
+    [
+      set pcolor red
     ]
 
+    ask patch (round mouse-xcor) (round mouse-ycor - 1)
+    [
+      set pcolor green
+    ]
 
+  ]
 
+  if door-orientation = "Down"
+  [
+    ask patch (round mouse-xcor) (round mouse-ycor)
+    [
+      set pcolor green
+    ]
+
+    ask patch (round mouse-xcor) (round mouse-ycor - 1)
+    [
+      set pcolor red
+    ]
+
+  ]
+
+  if door-orientation = "Right"
+  [
+    ask patch (round mouse-xcor) (round mouse-ycor)
+    [
+      set pcolor red
+    ]
+
+    ask patch (round mouse-xcor - 1) (round mouse-ycor)
+    [
+      set pcolor green
+    ]
+  ]
+
+  if door-orientation = "Left"
+  [
+    ask patch (round mouse-xcor) (round mouse-ycor)
+    [
+      set pcolor green
+    ]
+
+    ask patch (round mouse-xcor - 1) (round mouse-ycor)
+    [
+      set pcolor red
+    ]
+  ]
 end
 
+;;draw boundary - sraw boundary based on selected tool
+to draw-boundary [wall-color]
+  ask patch (round mouse-xcor) (round mouse-ycor)
+  [
+   set pcolor wall-color
+  ]
 
+  ask patch (round mouse-xcor - 1) (round mouse-ycor - 1)
+  [
+   set pcolor wall-color
+  ]
 
+    ask patch (round mouse-xcor - 1) (round mouse-ycor)
+  [
+   set pcolor wall-color
+  ]
+
+    ask patch (round mouse-xcor) (round mouse-ycor - 1)
+  [
+   set pcolor wall-color
+  ]
+end
+
+;;import from file - map is loaded from ./maps/ and replaces  the current map (user input - filename without extension)
 to import-from-file
   let file-name ""
   set file-name user-input "Name of file with map"
@@ -46,27 +134,44 @@ to import-from-file
          "\nAre you sure you want to Load?")
   [
     import-world filepath
+
     user-message "Map imported."
   ]
   [ user-message "Import Canceled. File not found." ]
 end
+
+;;export from file - file is saved in ./maps/ with .cvs extension (user input - filename without extension)
+to export-to-file
+  let file-name ""
+  set file-name user-input "Name of file to export"
+
+  let filepath (word "./maps/" file-name ".csv")
+  ifelse user-yes-or-no? (word "File will be saved : " filepath
+     "\nIf this file already exists, it will be overwritten.\nAre you sure you want to save?")
+  [
+    export-world filepath
+    user-message "File Saved."
+  ]
+  [ user-message "Save Canceled. File not saved." ]
+
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
-210
+359
 10
-1063
-864
+1179
+831
 -1
 -1
-13.0
+12.5
 1
 10
 1
 1
 1
 0
-0
-0
+1
+1
 1
 -32
 32
@@ -79,10 +184,10 @@ ticks
 30.0
 
 BUTTON
-107
-105
-176
-138
+101
+33
+170
+66
 Import
 import-from-file
 NIL
@@ -95,28 +200,13 @@ NIL
 NIL
 1
 
-SLIDER
-23
-160
-195
-193
-people
-people
-0
-100
-82.0
-1
-1
-NIL
-HORIZONTAL
-
 BUTTON
-26
-105
-90
-138
-Setup
-setup
+12
+32
+81
+65
+Export
+export-to-file
 NIL
 1
 T
@@ -126,6 +216,156 @@ NIL
 NIL
 NIL
 1
+
+BUTTON
+174
+102
+320
+135
+Use Tool (Space)
+draw
+T
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+259
+34
+325
+67
+Clear
+clear
+NIL
+1
+T
+OBSERVER
+NIL
+C
+NIL
+NIL
+1
+
+CHOOSER
+155
+267
+293
+312
+door-orientation
+door-orientation
+"Up" "Down" "Right" "Left"
+3
+
+TEXTBOX
+21
+158
+224
+177
+Tools
+13
+0.0
+1
+
+BUTTON
+227
+178
+296
+211
+Erase
+set current-tool \"Erase\"
+NIL
+1
+T
+OBSERVER
+NIL
+E
+NIL
+NIL
+1
+
+BUTTON
+123
+178
+190
+211
+Wall
+set current-tool \"Wall\"
+NIL
+1
+T
+OBSERVER
+NIL
+W
+NIL
+NIL
+1
+
+BUTTON
+20
+226
+134
+259
+Normal Door
+set current-tool \"Normal Door\"
+NIL
+1
+T
+OBSERVER
+NIL
+D
+NIL
+NIL
+1
+
+BUTTON
+21
+273
+145
+306
+Exit Sign Door
+set current-tool \"Exit Sign Door\"
+NIL
+1
+T
+OBSERVER
+NIL
+S
+NIL
+NIL
+1
+
+BUTTON
+21
+178
+84
+211
+Exit
+set current-tool \"Exit\"
+NIL
+1
+T
+OBSERVER
+NIL
+Q
+NIL
+NIL
+1
+
+MONITOR
+20
+97
+159
+142
+Current tool
+current-tool
+17
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?

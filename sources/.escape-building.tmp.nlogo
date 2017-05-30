@@ -10,6 +10,7 @@ to setup
   clear-drawing
   clear-all-plots
   clear-output
+
   setup-people
 
 end
@@ -46,6 +47,7 @@ to import-from-file
          "\nAre you sure you want to Load?")
   [
     import-world filepath
+    set last-used-map file-name
     user-message "Map imported."
   ]
   [ user-message "Import Canceled. File not found." ]
@@ -126,6 +128,17 @@ NIL
 NIL
 NIL
 1
+
+INPUTBOX
+21
+30
+187
+90
+last-used-map
+test
+1
+0
+String (reporter)
 
 @#$#@#$#@
 ## WHAT IS IT?
