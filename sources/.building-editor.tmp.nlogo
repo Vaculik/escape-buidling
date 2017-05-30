@@ -31,8 +31,26 @@ to draw
     ;; Normal Door
     if current-tool = "Normal Door"
     [ draw-boundary red ]
+    if current-tool = "Fill Indoor"
+    [
+      fill-indoor (round mouse-xcor) (round mouse-ycor)
+    ]
   ]
 
+end
+
+to fill-indoor [patch-xcor patch-ycor]
+  ask patch patch-xcor patch-ycor
+  [
+    if pcolor = black
+    [
+      set pcolor brown
+      fill-indoor (patch-xcor - 1) patch-ycor
+      fill-indoor (patch-xcor  1) (patch-ycor - 1)
+      fill-indoor (patch-xcor) patch-ycor
+      fill-indoor (patch-xcor) (patch-ycor - 1)
+    ]
+  ]
 end
 
 ;;erase - sets patch with mouse coord to black
@@ -157,9 +175,9 @@ to export-to-file
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-359
+410
 10
-1179
+1230
 831
 -1
 -1
@@ -170,8 +188,8 @@ GRAPHICS-WINDOW
 1
 1
 0
-1
-1
+0
+0
 1
 -32
 32
@@ -252,9 +270,9 @@ NIL
 1
 
 CHOOSER
-155
+206
 267
-293
+344
 312
 door-orientation
 door-orientation
@@ -272,9 +290,9 @@ Tools
 1
 
 BUTTON
-227
+278
 178
-296
+347
 211
 Erase
 set current-tool \"Erase\"
@@ -366,6 +384,23 @@ current-tool
 17
 1
 11
+
+BUTTON
+32
+357
+129
+390
+Fill Indoor
+set current-tool \"Fill Indoor\"
+NIL
+1
+T
+OBSERVER
+NIL
+A
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?

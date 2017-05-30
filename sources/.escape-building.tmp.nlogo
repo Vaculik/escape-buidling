@@ -10,7 +10,6 @@ to setup
   clear-drawing
   clear-all-plots
   clear-output
-
   setup-people
 
 end
@@ -24,12 +23,8 @@ end
 to setup-people
   let turtles-remaining people
   set-default-shape turtles "circle"
-
-    create-turtles turtles-remaining
-    [
-      set color white
-      setxy random-xcor random-ycor
-    ]
+  let targetedGroup patches with [pcolor = ]
+  ask n-of people targetedGroup [ sprout 1 [set color white]]
 
 
 
@@ -47,7 +42,6 @@ to import-from-file
          "\nAre you sure you want to Load?")
   [
     import-world filepath
-    set last-used-map file-name
     user-message "Map imported."
   ]
   [ user-message "Import Canceled. File not found." ]
@@ -128,17 +122,6 @@ NIL
 NIL
 NIL
 1
-
-INPUTBOX
-21
-30
-187
-90
-last-used-map
-test
-1
-0
-String (reporter)
 
 @#$#@#$#@
 ## WHAT IS IT?

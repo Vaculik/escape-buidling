@@ -23,12 +23,8 @@ end
 to setup-people
   let turtles-remaining people
   set-default-shape turtles "circle"
-
-    create-turtles turtles-remaining
-    [
-      set color white
-      setxy random-xcor random-ycor
-    ]
+  let targetedGroup patches with [pcolor = brown]
+  ask n-of people targetedGroup [ sprout 1 [set color white]]
 
 
 
@@ -104,7 +100,7 @@ people
 people
 0
 100
-82.0
+10.0
 1
 1
 NIL
