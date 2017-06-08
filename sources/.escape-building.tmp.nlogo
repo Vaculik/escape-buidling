@@ -3,6 +3,9 @@ globals
  current-tool door-orientation ;; variables needed to be compatible with editor (import without errors)
 ]
 
+turtles-own []
+patches-own []
+
 to setup
   clear-globals
   clear-ticks
@@ -11,23 +14,46 @@ to setup
   clear-all-plots
   clear-output
   setup-people
-
 end
 
 
 to go
-
+  ask turtles [
+    move-to-exit
+  ]
 
 end
+
+
+to move-to-exit
+  ifelse [pcolor] of patch-here = yellow [
+    hide-turtle
+  ]
+  [
+    let next-patches patch-set neighbors with [pcolor != blue]
+    let exit one-of patches with [pcolor = yellow]
+    let dist-to-exit (distance exit)
+    let go-to min-one-of next-patches [distance exit]
+
+    face go-to
+
+    let moved false
+    if count other turtles in-cone 1 90 with [not hidden?] = 0 [
+      fd 0.05
+      set moved true
+    ]
+  ]
+end
+
+
 
 to setup-people
   let turtles-remaining people
   set-default-shape turtles "circle"
-  let targetedGroup patches with [pcolor = ]
-  ask n-of people targetedGroup [ sprout 1 [set color white]]
-
-
-
+  let targetedGroup patches with [pcolor = brown]
+  ask n-of people targetedGroup [ sprout 1 [
+    set color white
+  ]]
 end
 
 
@@ -50,11 +76,11 @@ end
 GRAPHICS-WINDOW
 210
 10
-1063
-864
+998
+799
 -1
 -1
-13.0
+12.0
 1
 10
 1
@@ -100,7 +126,7 @@ people
 people
 0
 100
-82.0
+60.0
 1
 1
 NIL
@@ -122,6 +148,30 @@ NIL
 NIL
 NIL
 1
+
+BUTTON
+71
+49
+134
+82
+Go
+go
+T
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+OUTPUT
+6
+231
+204
+481
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -465,7 +515,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.0.1
+NetLogo 6.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
