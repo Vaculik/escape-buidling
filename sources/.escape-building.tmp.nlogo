@@ -11,7 +11,6 @@ Breed [corpses corpse]
 
 turtles-own
 [
-
   exiting-door
   count-random-move
   visited-patches
@@ -73,11 +72,11 @@ to go
   ask people
   [
 
-    output-print(word self " " prev-patch " " pcolor " " [isDoor] of prev-patch)
+    ;; output-print(word self " " prev-patch " " pcolor " " [isDoor] of prev-patch)
 
             if [isDoor] of prev-patch = true
             [
-              output-print(word self " is exiting")
+              ;; output-print(word self " is exiting")
               set exiting-door exiting-door-limit
             ]
 
@@ -100,7 +99,7 @@ to go
 
             ifelse isDoor = true or exiting-door > 0
             [
-              output-print(word self " walking through door " exiting-door)
+              ;; output-print(word self " walking through door " exiting-door)
               make-move-depr 30
               if exiting-door > 0
               [
@@ -145,6 +144,7 @@ to go
         ]
 
     ]
+
   ]
 
 end
@@ -247,7 +247,6 @@ to-report move-to-door [door-color blacklist-patches]
   [
     report false
   ]
-
 
 end
 
@@ -439,7 +438,7 @@ people-count
 people-count
 0
 100
-5.0
+100.0
 1
 1
 NIL
@@ -523,7 +522,7 @@ max-pressure
 max-pressure
 0
 100
-61.0
+50.0
 1
 1
 NIL
@@ -871,7 +870,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.0.1
+NetLogo 6.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
