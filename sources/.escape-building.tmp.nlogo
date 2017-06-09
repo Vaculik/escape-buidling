@@ -106,6 +106,11 @@ to go
           set visited-patches lput patch-here visited-patches
         ]
     ]
+
+    set pressure 0
+    if breed != corpses [
+      set color white
+    ]
   ]
 
 end
@@ -147,7 +152,6 @@ let patch-to min-one-of patches with [ pcolor = door-color and not member? self 
   [
     report false
   ]
-
 
 
 end
@@ -204,9 +208,6 @@ to make-move [to-patch]
     face to-patch
     push-people-ahead
   ]
-
-  set pressure 0
-
 end
 
 to-report move-ahead
@@ -343,7 +344,7 @@ people-count
 people-count
 0
 200
-150.0
+99.0
 1
 1
 NIL
@@ -427,7 +428,7 @@ max-pressure
 max-pressure
 0
 100
-1.0
+61.0
 1
 1
 NIL
