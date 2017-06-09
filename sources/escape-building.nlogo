@@ -62,7 +62,7 @@ to go
           ifelse pcolor = red or pcolor = green
           [
             output-print("walking through door")
-            fd 1
+            make-move 5
           ]
           [
             let find-door (move-to-door yellow visited-patches)
@@ -75,12 +75,7 @@ to go
                 set find-door (move-to-door red visited-patches)
                 ifelse (find-door = false)
                 [
-                  while [[pcolor] of patch-ahead 1 = blue]
-                  [
-                    lt random 30
-                    rt random 30
-                  ]
-                  fd 1
+                  make-move 30
                   output-print "random move"
                   set count-random-move count-random-move + 1
                   if count-random-move = 10
@@ -101,16 +96,25 @@ to go
             ]
           ]
         ]
-        if not member? patch-here visited-patches
+
+      ]
+      if not member? patch-here visited-patches
         [
           set visited-patches lput patch-here visited-patches
         ]
-      ]
     ]
   ]
 
 end
 
+to make-move [degree]
+  while [[pcolor] of patch-ahead 1 = blue]
+  [
+    lt random degree
+    rt random degree
+  ]
+  fd 1
+end
 
 to move-to-exit
   ifelse [pcolor] of patch-here = yellow [
@@ -133,13 +137,7 @@ to-report move-to-door [door-color blacklist-patches]
   ifelse is-in-line-of-sight patch-to
   [
 
-    while [[pcolor] of patch-ahead 1 = blue]
-    [
-      lt random 30
-      rt random 30
-    ]
-
-    fd 1
+    make-move 5
     output-print (word "move to door "  pcolor)
     report true
   ]
