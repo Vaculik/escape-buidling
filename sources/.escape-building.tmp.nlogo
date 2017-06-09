@@ -1,5 +1,7 @@
 globals
 [
+  count-random-move-limit
+  exiting-door-limit
   freed
   current-tool door-orientation ;; variables needed to be compatible with editor (import without errors)
 ]
@@ -9,12 +11,14 @@ Breed [corpses corpse]
 
 turtles-own
 [
+
+  exiting-door
   count-random-move
   visited-patches
-
+  prev-patch
   pressure
 ]
-patches-own []
+patches-own [isDoor]
 
 to setup
   clear-globals
@@ -23,9 +27,28 @@ to setup
   clear-drawing
   clear-all-plots
   clear-output
+  setup-globals
   setup-people
+  setup-patches
+
 end
 
+to setup-patches
+  ask patches
+  [
+   ifelse pcolor = red or pcolor = green or pcolor = yellow
+   [
+      set isDoor true
+    ]
+    [
+      set isDoor false
+    ]
+  ]
+end
+to setup-globals
+  set count-random-move-limit  30
+  set exiting-door-limit 60
+end
 
 to setup-people
   set-default-shape turtles "circle"
@@ -36,8 +59,10 @@ to setup-people
       set breed people
       set color white
       set size 1
-      set visited-patches (list patch-here)
+      set visited-patches (list)
+      set prev-patch patch-here
       set pressure 0
+      set exiting-door 0
     ]
   ]
 end
@@ -47,6 +72,14 @@ to go
 
   ask people
   [
+
+    output-print(word self " " prev-patch " " pcolor " " [isDoor] of prev-patch)
+
+            if [isDoor] of prev-patch = true
+            [
+              output-print(word self " is exiting")
+              set exiting-door exiting-door-limit
+            ]
 
     ifelse pcolor = yellow
     [
@@ -61,29 +94,41 @@ to go
       ]
 
     [
-    if patch-ahead 1 != nobody
-    [
+        if patch-ahead 1 != nobody
+        [
 
-          ifelse pcolor = red or pcolor = green
-          [
-            make-move-depr 5
-          ]
-          [
-            let find-door (move-to-door yellow visited-patches)
 
-            ifelse (find-door = false)
+            ifelse isDoor = true or exiting-door > 0
             [
-              set find-door (move-to-door green visited-patches)
+              output-print(word self " walking through door " exiting-door)
+              make-move-depr 30
+              if exiting-door > 0
+              [
+                set exiting-door exiting-door - 1
+              ]
+            ]
+            [
+              let find-door (move-to-door yellow visited-patches)
+
               ifelse (find-door = false)
               [
-                set find-door (move-to-door red visited-patches)
+                set find-door (move-to-door green visited-patches)
                 ifelse (find-door = false)
                 [
-                  make-move-depr 30
-                  set count-random-move count-random-move + 1
-                  if count-random-move = 10
+                  set find-door (move-to-door red visited-patches)
+                  ifelse (find-door = false)
                   [
-                    set visited-patches (list patch-here)
+                    ;;output-print(word self " random move")
+                    make-move-depr 30
+                    set count-random-move count-random-move + 1
+                    if count-random-move = count-random-move-limit
+                    [
+                      set visited-patches (list)
+                      set prev-patch patch-here
+                    ]
+                  ]
+                  [
+                    set count-random-move 0
                   ]
                 ]
                 [
@@ -94,22 +139,76 @@ to go
                 set count-random-move 0
               ]
             ]
-            [
-              set count-random-move 0
-            ]
           ]
+          put-patch-to-visited patch-here
+
         ]
 
-      ]
-      if not member? patch-here visited-patches
-        [
-          set visited-patches lput patch-here visited-patches
-        ]
     ]
   ]
 
 end
 
+to put-patch-to-visited [patch-to-visited]
+
+  ;;output-print(word self " is on " patch-to-visited " isDoor:" [isDoor] of patch-to-visited)
+
+  if patch-to-visited != prev-patch
+  [
+    if not member? patch-to-visited visited-patches
+    [
+      ;;output-print(word patch-to-visited " moved to visited")
+      set visited-patches lput patch-to-visited visited-patches
+      if [isDoor] of patch-to-visited = true
+      [
+        put-patch-neighbours patch-to-visited
+      ]
+      set prev-patch patch-to-visited
+    ]
+
+  ]
+
+end
+
+to put-patch-neighbours [patch-to-visited]
+
+   if not member? patch-to-visited visited-patches
+  [
+    set visited-patches lput patch-to-visited visited-patches
+  ]
+      let patch-up patch [pxcor] of patch-to-visited ([pycor] of patch-to-visited + 1)
+      if patch-up != nobody and [isDoor] of patch-up = true
+      [
+        if not member? patch-up visited-patches
+        [
+          put-patch-neighbours patch-up
+        ]
+      ]
+      let patch-down patch ([pxcor] of patch-to-visited) ([pycor] of patch-to-visited - 1)
+      if patch-down != nobody and [isDoor] of patch-down = true
+      [
+        if not member? patch-down visited-patches
+        [
+          put-patch-neighbours patch-down
+        ]
+      ]
+      let patch-left patch ([pxcor] of patch-to-visited - 1) ([pycor] of patch-to-visited)
+      if patch-left != nobody and [isDoor] of patch-left = true
+      [
+        if not member? patch-left visited-patches
+        [
+          put-patch-neighbours patch-left
+        ]
+      ]
+      let patch-right patch ([pxcor] of patch-to-visited + 1) ([pycor] of patch-to-visited)
+      if patch-right != nobody and [isDoor] of patch-right = true
+      [
+        if not member? patch-right visited-patches
+        [
+          put-patch-neighbours patch-right
+        ]
+      ]
+end
 to make-move-depr [degree]
   while [[pcolor] of patch-ahead 1 = blue]
   [
@@ -135,13 +234,14 @@ end
 
 to-report move-to-door [door-color blacklist-patches]
 
-  let patch-to one-of patches with [ pcolor = door-color and not member? self blacklist-patches]
-  ;; output-print(word self " => " patch-to )
+  let patch-to min-one-of patches with [ pcolor = door-color and not member? self blacklist-patches][distance myself]
+
   ifelse is-in-line-of-sight patch-to
   [
     make-move patch-to
     ;; make-move-depr 5
-    ;; output-print (word "move to door "  pcolor)
+    ;;output-print(word self " moves to " patch-to " with color " [pcolor] of patch-to)
+
     report true
   ]
   [
@@ -234,7 +334,7 @@ to-report select-side
   left 45
   let left-overload count people in-cone 2 90
   right 90
-  let right-overload count  in-cone 2 90
+  let right-overload count people in-cone 2 90
   left 45
 
   ifelse left-overload < right-overload [
@@ -249,7 +349,7 @@ to-report is-wall-ahead
 end
 
 to-report is-person-ahead
-  report count other turtles in-cone 1 135 > 0
+  report count other people in-cone 1 135 > 0
 end
 
 to push-people-ahead
@@ -336,7 +436,7 @@ people-count
 people-count
 0
 100
-100.0
+5.0
 1
 1
 NIL
@@ -768,7 +868,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.0
+NetLogo 6.0.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
