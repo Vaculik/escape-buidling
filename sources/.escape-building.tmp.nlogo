@@ -249,11 +249,13 @@ to-report move-to-door [door-color blacklist-patches]
   ]
 
 
-
 end
 
 
 to-report is-in-line-of-sight [patch-to]
+  if patch-to = nobody [
+    report false
+  ]
 
   let dist-of-patch (distancexy [pxcor] of patch-to [pycor] of patch-to)
   let dist 1
@@ -298,10 +300,9 @@ to make-move [to-patch]
   ]
 
   if not moved [
+    face to-patch
     push-people-ahead
   ]
-
-  set pressure 0
 end
 
 to-report move-ahead
@@ -359,8 +360,10 @@ to push-people-ahead
     let pressure-to-add (pressure + 1) / count people-ahead
     ask people-ahead [
       set pressure pressure + pressure-to-add
+      let clr 255 * (1 - (pressure / max-pressure)) mod 255
+      set color (list 255 clr clr)
       if pressure > max-pressure [
-        set color red
+        set color black
         set breed corpses
       ]
     ]
@@ -520,7 +523,7 @@ max-pressure
 max-pressure
 0
 100
-10.0
+61.0
 1
 1
 NIL
