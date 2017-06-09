@@ -3,7 +3,10 @@ globals
  current-tool door-orientation ;; variables needed to be compatible with editor (import without errors)
 ]
 
-turtles-own []
+turtles-own
+[
+  visited-patches
+]
 patches-own []
 
 to setup
@@ -16,6 +19,20 @@ to setup
   setup-people
 end
 
+
+to setup-people
+  let turtles-remaining people
+  set-default-shape turtles "circle"
+  let targetedGroup patches with [pcolor = brown]
+  ask n-of people targetedGroup
+  [ sprout 1
+    [
+      set color white
+      set size 2
+      set visited-patches (list patch-here)
+    ]
+  ]
+end
 
 to go
   ask turtles [
@@ -44,18 +61,6 @@ to move-to-exit
     ]
   ]
 end
-
-
-
-to setup-people
-  let turtles-remaining people
-  set-default-shape turtles "circle"
-  let targetedGroup patches with [pcolor = brown]
-  ask n-of people targetedGroup [ sprout 1 [
-    set color white
-  ]]
-end
-
 
 
 to import-from-file
@@ -515,7 +520,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.0
+NetLogo 6.0.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
