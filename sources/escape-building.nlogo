@@ -2,6 +2,7 @@ globals
 [
   count-random-move-limit
   exiting-door-limit
+  is-stuck-limit
   freed
   current-tool door-orientation ;; variables needed to be compatible with editor (import without errors)
 ]
@@ -11,6 +12,8 @@ Breed [corpses corpse]
 
 turtles-own
 [
+  move-steps
+  next-door
   exiting-door
   count-random-move
   visited-patches
@@ -47,6 +50,7 @@ end
 to setup-globals
   set count-random-move-limit  30
   set exiting-door-limit 60
+  set is-stuck-limit 100
 end
 
 to setup-people
@@ -62,6 +66,8 @@ to setup-people
       set prev-patch patch-here
       set pressure 0
       set exiting-door 0
+      set move-steps 0
+      set next-door nobody
     ]
   ]
 end
@@ -99,13 +105,16 @@ to go
 
             ifelse isDoor = true or exiting-door > 0
             [
-              ;; output-print(word self " walking through door " exiting-door)
-              make-move-depr 30
+
+              make-move-random 30
               if exiting-door > 0
               [
+                ;;output-print(word self " exiting door " exiting-door)
                 set exiting-door exiting-door - 1
               ]
             ]
+            [
+            ifelse next-door = nobody
             [
               let find-door (move-to-door yellow visited-patches)
 
@@ -118,7 +127,7 @@ to go
                   ifelse (find-door = false)
                   [
                     ;;output-print(word self " random move")
-                    make-move-depr 30
+                    make-move-random 30
                     set count-random-move count-random-move + 1
                     if count-random-move = count-random-move-limit
                     [
@@ -138,6 +147,30 @@ to go
                 set count-random-move 0
               ]
             ]
+            [
+             face next-door
+              if find-better-next-door = false
+              [
+                ;;output-print(word self " found better door " next-door)
+                make-move next-door
+                ;;make-move-random 15
+                if move-steps > is-stuck-limit
+                [
+                  if is-in-line-of-sight next-door = false
+                  [
+                    set next-door nobody
+                  ]
+                  set move-steps 0
+                ]
+
+              ]
+              if patch-here = next-door
+              [
+                set next-door nobody
+              ]
+            ]
+          ]
+
           ]
           put-patch-to-visited patch-here
 
@@ -153,6 +186,32 @@ to go
 
 end
 
+to-report find-better-next-door
+  if [pcolor] of next-door = yellow
+  [
+    report false
+  ]
+  let find-door (move-to-door yellow visited-patches)
+  ifelse (find-door = false)
+  [
+    set find-door (move-to-door green visited-patches)
+    ifelse (find-door = false)
+    [
+      if [pcolor] of next-door = green
+      [
+       report false
+      ]
+      report move-to-door red visited-patches
+    ]
+    [
+       report true
+    ]
+  ]
+  [
+     report true
+  ]
+
+end
 to put-patch-to-visited [patch-to-visited]
 
   ;;output-print(word self " is on " patch-to-visited " isDoor:" [isDoor] of patch-to-visited)
@@ -213,13 +272,14 @@ to put-patch-neighbours [patch-to-visited]
         ]
       ]
 end
-to make-move-depr [degree]
+to make-move-random [degree]
   while [[pcolor] of patch-ahead 1 = blue]
   [
     lt random degree
     rt random degree
   ]
   fd 0.05
+  set move-steps move-steps + 1
 end
 
 to move-to-exit
@@ -242,18 +302,76 @@ to-report move-to-door [door-color blacklist-patches]
 
   ifelse is-in-line-of-sight patch-to
   [
-    make-move patch-to
-    ;; make-move-depr 5
+    ;;make-move patch-to
+    make-move-random 5
     ;;output-print(word self " moves to " patch-to " with color " [pcolor] of patch-to)
-
+    set next-door patch-to
     report true
   ]
   [
-    report false
+    ifelse is-in-line-of-sight-neighbours patch-to 3
+    [
+      ;;make-move patch-to
+      make-move-random 5
+      ;;output-print(word self " moves to " patch-to " with color " [pcolor] of patch-to)
+      set next-door patch-to
+      report true
+    ]
+    [
+      report false
+    ]
+
   ]
 
 end
 
+to-report is-in-line-of-sight-neighbours [parent-patch max-dist-of-neighbours]
+
+  if parent-patch != nobody
+  [
+    let curr-dist 1
+    while [curr-dist <= max-dist-of-neighbours]
+    [
+      let patch-up patch [pxcor] of parent-patch ([pycor] of parent-patch + curr-dist)
+      if patch-up != nobody or [pcolor] of patch-up = [pcolor] of parent-patch
+      [
+        if is-in-line-of-sight patch-up
+        [
+          report true
+        ]
+      ]
+
+      let patch-down patch [pxcor] of parent-patch ([pycor] of parent-patch - curr-dist)
+      if patch-down != nobody or [pcolor] of patch-down = [pcolor] of parent-patch
+      [
+        if is-in-line-of-sight patch-down
+        [
+          report true
+        ]
+      ]
+
+      let patch-left patch ([pxcor] of parent-patch + curr-dist) [pycor] of parent-patch
+      if patch-left != nobody or [pcolor] of patch-left = [pcolor] of parent-patch
+      [
+        if is-in-line-of-sight patch-left
+        [
+          report true
+        ]
+      ]
+
+      let patch-right patch ([pxcor] of parent-patch + curr-dist) [pycor] of parent-patch
+      if patch-right != nobody or [pcolor] of patch-right = [pcolor] of parent-patch
+      [
+        if is-in-line-of-sight patch-right
+        [
+          report true
+        ]
+      ]
+      set curr-dist curr-dist + 1
+    ]
+  ]
+  report false
+end
 
 to-report is-in-line-of-sight [patch-to]
   if patch-to = nobody [
@@ -275,10 +393,20 @@ to-report is-in-line-of-sight [patch-to]
     if p != last-patch [
       ask p
       [
-        if pcolor = blue
+        ifelse [pcolor] of patch-to = green
         [
-          set wall-count wall-count + 1
-          ;;output-print "is in line of sight"
+          if pcolor = blue or pcolor = red
+          [
+            set wall-count wall-count + 1
+            ;;output-print "is in line of sight"
+          ]
+        ]
+        [
+          if pcolor = blue
+          [
+            set wall-count wall-count + 1
+            ;;output-print "is in line of sight"
+          ]
         ]
       ]
       set last-patch p
@@ -306,6 +434,7 @@ to make-move [to-patch]
     face to-patch
     push-people-ahead
   ]
+  set move-steps move-steps + 1
 end
 
 to-report move-ahead
@@ -874,7 +1003,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.0
+NetLogo 6.0.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
