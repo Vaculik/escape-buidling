@@ -1,9 +1,14 @@
 globals
 [
+  freed
  current-tool door-orientation ;; variables needed to be compatible with editor (import without errors)
 ]
 
-turtles-own []
+turtles-own
+[
+  count-random-move
+  visited-patches
+]
 patches-own []
 
 to setup
@@ -17,9 +22,91 @@ to setup
 end
 
 
+to setup-people
+  let turtles-remaining people
+  set-default-shape turtles "circle"
+  let targetedGroup patches with [pcolor = brown]
+  ask n-of people targetedGroup
+  [ sprout 1
+    [
+      set color white
+      set size 1
+      set visited-patches (list patch-here)
+    ]
+  ]
+end
+
 to go
-  ask turtles [
-    move-to-exit
+  if not any? turtles [ stop ]
+  ask turtles
+  [
+
+    ifelse pcolor = yellow
+    [
+      let patch-to min-one-of patches with [ pcolor = black] [distance myself]
+      face patch-to
+      fd 1
+
+    ]
+    [
+      ifelse pcolor = black
+      [
+      set freed freed + 1
+      die
+      ]
+
+    [
+    if patch-ahead 1 != nobody
+    [
+
+          ifelse pcolor = red or pa = green
+          [
+            output-print("walking through door")
+            fd 1
+          ]
+          [
+            let find-door (move-to-door yellow visited-patches)
+
+            ifelse (find-door = false)
+            [
+              set find-door (move-to-door green visited-patches)
+              ifelse (find-door = false)
+              [
+                set find-door (move-to-door red visited-patches)
+                ifelse (find-door = false)
+                [
+                  while [[pcolor] of patch-ahead 1 = blue]
+                  [
+                    lt random 30
+                    rt random 30
+                  ]
+                  fd 1
+                  output-print "random move"
+                  set count-random-move count-random-move + 1
+                  if count-random-move = 10
+                  [
+                    set visited-patches (list patch-here)
+                  ]
+                ]
+                [
+                  set count-random-move 0
+                ]
+              ]
+              [
+                set count-random-move 0
+              ]
+            ]
+            [
+              set count-random-move 0
+            ]
+          ]
+        ]
+        if not member? patch-here visited-patches
+        [
+          set visited-patches lput patch-here visited-patches
+        ]
+      ]
+    ]
   ]
 
 end
@@ -27,36 +114,79 @@ end
 
 to move-to-exit
   ifelse [pcolor] of patch-here = yellow [
-    hide-turtle
+    die
   ]
   [
-    let next-patches patch-set neighbors with [pcolor != blue]
-    let exit one-of patches with [pcolor = yellow]
-    let dist-to-exit (distance exit)
-    let go-to min-one-of next-patches [distance exit]
-
-    face go-to
-
-    let moved false
-    if count other turtles in-cone 1 90 with [not hidden?] = 0 [
-      fd 0.05
-      set moved true
+    if not member? patch-here visited-patches
+    [
+      set visited-patches lput patch-here visited-patches
     ]
+
   ]
 end
 
 
+to-report move-to-door [door-color blacklist-patches]
 
-to setup-people
-  let turtles-remaining people
-  set-default-shape turtles "circle"
-  let targetedGroup patches with [pcolor = brown]
-  ask n-of people targetedGroup [ sprout 1 [
-    set color white
-  ]]
+  let patch-to min-one-of patches with [ pcolor = door-color and not member? self blacklist-patches] [distance myself]
+  output-print(word self " => " patch-to )
+  ifelse is-in-line-of-sight patch-to
+  [
+
+    while [[pcolor] of patch-ahead 1 = blue]
+    [
+      lt random 30
+      rt random 30
+    ]
+
+    fd 1
+    output-print (word "move to door "  pcolor)
+    report true
+  ]
+  [
+    report false
+  ]
+
+
+
 end
 
 
+to-report is-in-line-of-sight [patch-to]
+
+  let dist-of-patch (distancexy [pxcor] of patch-to [pycor] of patch-to)
+  let dist 1
+  let c color
+  let last-patch patch-here
+  let wall-count 0
+  face patch-to
+  while [dist <= dist-of-patch] [
+    let p patch-ahead dist
+    ;; if we are looking diagonally across
+    ;; a patch it is possible we'll get the
+    ;; same patch for distance x and x + 1
+    ;; but we don't need to check again.
+    if p != last-patch [
+      ask p
+      [
+        if pcolor = blue
+        [
+          set wall-count wall-count + 1
+          ;;output-print "is in line of sight"
+        ]
+      ]
+      set last-patch p
+    ]
+    set dist dist + 1
+  ]
+  ifelse wall-count > 0
+  [
+    report false
+  ]
+  [
+    report true
+  ]
+end
 
 to import-from-file
   let file-name ""
@@ -74,10 +204,10 @@ to import-from-file
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-210
-10
-998
-799
+286
+12
+1074
+801
 -1
 -1
 12.0
@@ -101,10 +231,10 @@ ticks
 30.0
 
 BUTTON
-107
-105
-176
-138
+34
+47
+103
+80
 Import
 import-from-file
 NIL
@@ -126,17 +256,17 @@ people
 people
 0
 100
-60.0
+3.0
 1
 1
 NIL
 HORIZONTAL
 
 BUTTON
-26
-105
-90
-138
+140
+46
+204
+79
 Setup
 setup
 NIL
@@ -150,13 +280,13 @@ NIL
 1
 
 BUTTON
-71
-49
-134
-82
-Go
+35
+92
+118
+125
+Go Step
 go
-T
+NIL
 1
 T
 OBSERVER
@@ -167,11 +297,39 @@ NIL
 1
 
 OUTPUT
-6
-231
-204
-481
+1182
+68
+1784
+494
 11
+
+MONITOR
+57
+249
+114
+294
+Freed
+freed
+17
+1
+11
+
+BUTTON
+140
+92
+241
+125
+Go forever
+go
+T
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -515,7 +673,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.0
+NetLogo 6.0.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@

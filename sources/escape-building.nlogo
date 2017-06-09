@@ -54,11 +54,12 @@ to go
       set freed freed + 1
       die
       ]
-      [
-        if patch-ahead 1 != nobody
-        [
 
-          ifelse patch-here = red or patch-here = green
+    [
+    if patch-ahead 1 != nobody
+    [
+
+          ifelse pcolor = red or pcolor = green
           [
             output-print("walking through door")
             fd 1
@@ -255,7 +256,7 @@ people
 people
 0
 100
-10.0
+3.0
 1
 1
 NIL
