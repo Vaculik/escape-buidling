@@ -1,13 +1,18 @@
 globals
 [
   freed
- current-tool door-orientation ;; variables needed to be compatible with editor (import without errors)
+  current-tool door-orientation ;; variables needed to be compatible with editor (import without errors)
 ]
+
+Breed [people person]
+Breed [corpses corpse]
 
 turtles-own
 [
   count-random-move
   visited-patches
+
+  pressure
 ]
 patches-own []
 
@@ -23,23 +28,24 @@ end
 
 
 to setup-people
-  let turtles-remaining people
   set-default-shape turtles "circle"
   let targetedGroup patches with [pcolor = brown]
-  ask n-of people targetedGroup
+  ask n-of people-count targetedGroup
   [ sprout 1
     [
+      set breed people
       set color white
       set size 1
       set visited-patches (list patch-here)
+      set pressure 0
     ]
   ]
 end
 
 to go
-  if not any? turtles [ stop ]
+  if not any? people [ stop ]
 
-  ask turtles
+  ask people
   [
 
     ifelse pcolor = yellow
@@ -191,6 +197,11 @@ to make-move [to-patch]
     set moved try-to-get-round
   ]
 
+  if not moved [
+    push-people-ahead
+  ]
+
+  set pressure 0
 end
 
 to-report move-ahead
@@ -221,9 +232,9 @@ to-report select-side
   ]
 
   left 45
-  let left-overload count turtles in-cone 2 90
+  let left-overload count people in-cone 2 90
   right 90
-  let right-overload count turtles in-cone 2 90
+  let right-overload count people in-cone 2 90
   left 45
 
   ifelse left-overload < right-overload [
@@ -235,11 +246,25 @@ end
 
 to-report is-wall-ahead
   report [pcolor] of patch-ahead 1 = blue
-  ;; report count patches in-cone 1 180 with [pcolor = blue] > 0
 end
 
 to-report is-person-ahead
-  report count other turtles in-cone 1 135 > 0
+  report count other people in-cone 1 135 > 0
+end
+
+to push-people-ahead
+  let people-ahead other people in-cone 1 135
+
+  if count people-ahead > 0 [
+    let pressure-to-add (pressure + 1) / count people-ahead
+    ask people-ahead [
+      set pressure pressure + pressure-to-add
+      if pressure > max-pressure [
+        set color red
+        set breed corpses
+      ]
+    ]
+  ]
 end
 
 
@@ -307,8 +332,8 @@ SLIDER
 160
 195
 193
-people
-people
+people-count
+people-count
 0
 100
 100.0
@@ -385,6 +410,21 @@ NIL
 NIL
 NIL
 1
+
+SLIDER
+42
+333
+214
+366
+max-pressure
+max-pressure
+0
+100
+10.0
+1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
