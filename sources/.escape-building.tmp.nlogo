@@ -38,15 +38,14 @@ end
 
 to go
   if not any? turtles [ stop ]
+
   ask turtles
   [
 
     ifelse pcolor = yellow
     [
       let patch-to min-one-of patches with [ pcolor = black] [distance myself]
-      face patch-to
-      fd 1
-
+      make-move patch-to
     ]
     [
       ifelse pcolor = black
@@ -59,10 +58,9 @@ to go
     if patch-ahead 1 != nobody
     [
 
-          ifelse pcolor = red or pa = green
+          ifelse pcolor = red or pcolor = green
           [
-            output-print("walking through door")
-            fd 1
+            make-move-depr 5
           ]
           [
             let find-door (move-to-door yellow visited-patches)
@@ -75,13 +73,7 @@ to go
                 set find-door (move-to-door red visited-patches)
                 ifelse (find-door = false)
                 [
-                  while [[pcolor] of patch-ahead 1 = blue]
-                  [
-                    lt random 30
-                    rt random 30
-                  ]
-                  fd 1
-                  output-print "random move"
+                  make-move-depr 30
                   set count-random-move count-random-move + 1
                   if count-random-move = 10
                   [
@@ -101,16 +93,25 @@ to go
             ]
           ]
         ]
-        if not member? patch-here visited-patches
+
+      ]
+      if not member? patch-here visited-patches
         [
           set visited-patches lput patch-here visited-patches
         ]
-      ]
     ]
   ]
 
 end
 
+to make-move-depr [degree]
+  while [[pcolor] of patch-ahead 1 = blue]
+  [
+    lt random degree
+    rt random degree
+  ]
+  fd 0.05
+end
 
 to move-to-exit
   ifelse [pcolor] of patch-here = yellow [
@@ -128,19 +129,13 @@ end
 
 to-report move-to-door [door-color blacklist-patches]
 
-  let patch-to min-one-of patches with [ pcolor = door-color and not member? self blacklist-patches] [distance myself]
-  output-print(word self " => " patch-to )
+  let patch-to one-of patches with [ pcolor = door-color and not member? self blacklist-patches]
+  ;; output-print(word self " => " patch-to )
   ifelse is-in-line-of-sight patch-to
   [
-
-    while [[pcolor] of patch-ahead 1 = blue]
-    [
-      lt random 30
-      rt random 30
-    ]
-
-    fd 1
-    output-print (word "move to door "  pcolor)
+    make-move patch-to
+    ;; make-move-depr 5
+    ;; output-print (word "move to door "  pcolor)
     report true
   ]
   [
@@ -187,6 +182,66 @@ to-report is-in-line-of-sight [patch-to]
     report true
   ]
 end
+
+to make-move [to-patch]
+  face to-patch
+  let moved true
+
+  if not move-ahead [
+    set moved try-to-get-round
+  ]
+
+end
+
+to-report move-ahead
+  if not is-wall-ahead and not is-person-ahead [
+    fd 0.05
+    report true
+  ]
+  report false
+end
+
+to-report try-to-get-round
+  let side select-side
+
+  left 45 * side
+  if not move-ahead [
+    left 45 * side
+    report move-ahead
+  ]
+  report true
+end
+
+to-report select-side
+  if [pcolor] of patch-left-and-ahead 45 1 = blue [
+    report -1
+  ]
+  if [pcolor] of patch-left-and-ahead 45 1 = blue [
+    report 1
+  ]
+
+  left 45
+  let left-overload count turtles in-cone 2 90
+  right 90
+  let right-overload count turtles in-cone 2 90
+  left 45
+
+  ifelse left-overload < right-overload [
+    report 1
+  ] [
+    report -1
+  ]
+end
+
+to-report is-wall-ahead
+  report [pcolor] of patch-ahead 1 = blue
+  ;; report count patches in-cone 1 180 with [pcolor = blue] > 0
+end
+
+to-report is-person-ahead
+  report count other turtles in-cone 1 135 > 0
+end
+
 
 to import-from-file
   let file-name ""
@@ -256,7 +311,7 @@ people
 people
 0
 100
-3.0
+100.0
 1
 1
 NIL
@@ -673,7 +728,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.0.1
+NetLogo 6.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
