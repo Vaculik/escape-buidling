@@ -148,6 +148,8 @@ to go
               ]
             ]
             [
+              ;;output-print(word self " is door " [isDoor] of next-door)
+
              face next-door
               if find-better-next-door = false
               [
@@ -194,10 +196,14 @@ to-report find-better-next-door
   let find-door (move-to-door yellow visited-patches)
   ifelse (find-door = false)
   [
+     if [pcolor] of next-door = green
+      [
+       report false
+      ]
     set find-door (move-to-door green visited-patches)
     ifelse (find-door = false)
     [
-      if [pcolor] of next-door = green
+      if [pcolor] of next-door = red
       [
        report false
       ]
@@ -282,37 +288,25 @@ to make-move-random [degree]
   set move-steps move-steps + 1
 end
 
-to move-to-exit
-  ifelse [pcolor] of patch-here = yellow [
-    die
-  ]
-  [
-    if not member? patch-here visited-patches
-    [
-      set visited-patches lput patch-here visited-patches
-    ]
-
-  ]
-end
 
 
 to-report move-to-door [door-color blacklist-patches]
 
   let patch-to min-one-of patches with [ pcolor = door-color and not member? self blacklist-patches][distance myself]
 
-  ifelse is-in-line-of-sight patch-to
+  ifelse is-in-line-of-sight-random patch-to ((remainder (random 100) 3) + 2)
   [
-    ;;make-move patch-to
-    make-move-random 5
+    make-move patch-to
+    ;;make-move-random 5
     ;;output-print(word self " moves to " patch-to " with color " [pcolor] of patch-to)
-    set next-door patch-to
+    ;;set next-door patch-to
     report true
   ]
   [
     ifelse is-in-line-of-sight-neighbours patch-to 3
     [
-      ;;make-move patch-to
-      make-move-random 5
+      make-move patch-to
+      ;;make-move-random 5
       ;;output-print(word self " moves to " patch-to " with color " [pcolor] of patch-to)
       set next-door patch-to
       report true
@@ -323,6 +317,56 @@ to-report move-to-door [door-color blacklist-patches]
 
   ]
 
+end
+
+to-report is-in-line-of-sight-random [parent-patch random-dist]
+
+ ;; output-print(word self " random " random-dist)
+  if parent-patch != nobody
+  [
+
+      let patch-up patch [pxcor] of parent-patch ([pycor] of parent-patch + random-dist)
+    if patch-up != nobody and [pcolor] of patch-up = [pcolor] of parent-patch and [isDoor] of patch-up
+      [
+        if is-in-line-of-sight patch-up
+        [
+          set next-door patch-up
+          report true
+        ]
+      ]
+
+      let patch-down patch [pxcor] of parent-patch ([pycor] of parent-patch - random-dist)
+      if patch-down != nobody and [pcolor] of patch-down = [pcolor] of parent-patch and [isDoor] of patch-down
+      [
+        if is-in-line-of-sight patch-down
+        [
+          set next-door patch-down
+          report true
+        ]
+      ]
+
+      let patch-left patch ([pxcor] of parent-patch + random-dist) [pycor] of parent-patch
+      if patch-left != nobody and [pcolor] of patch-left = [pcolor] of parent-patch and [isDoor] of patch-left
+      [
+        if is-in-line-of-sight patch-left
+        [
+          set next-door patch-left
+          report true
+        ]
+      ]
+
+      let patch-right patch ([pxcor] of parent-patch + random-dist) [pycor] of parent-patch
+      if patch-right != nobody and [pcolor] of patch-right = [pcolor] of parent-patch and [isDoor] of patch-right
+      [
+        if is-in-line-of-sight patch-right
+        [
+          set next-door patch-right
+          report true
+        ]
+      ]
+
+  ]
+  report false
 end
 
 to-report is-in-line-of-sight-neighbours [parent-patch max-dist-of-neighbours]
@@ -571,7 +615,7 @@ people-count
 people-count
 0
 100
-100.0
+22.0
 1
 1
 NIL
