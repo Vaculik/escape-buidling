@@ -106,7 +106,8 @@ to go
             ifelse isDoor = true or exiting-door > 0
             [
 
-              make-move-random 30
+              let patch-to min-one-of patches with [ pcolor = brown] [distance myself]
+              make-move patch-to
               if exiting-door > 0
               [
                 ;;output-print(word self " exiting door " exiting-door)
@@ -615,7 +616,7 @@ people-count
 people-count
 0
 100
-22.0
+4.0
 1
 1
 NIL
