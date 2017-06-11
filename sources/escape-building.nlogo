@@ -1,7 +1,5 @@
 globals
 [
-  final-time ;;final-time (for timer)
-  is-running ;;is simulation running (for timer)
   count-random-move-limit ;;how many consecutively random moves resets visited-patches (no door find yet)
   exiting-door-limit ;;how many steps is person exiting door
   check-door-limit ;; how many steps we check if next-door is still in sight
@@ -36,6 +34,7 @@ to setup
   clear-drawing
   clear-all-plots
   clear-output
+  reset-ticks
   setup-globals
   setup-people
   setup-patches
@@ -58,8 +57,6 @@ end
 
 ;;setup-globals
 to setup-globals
-  set is-running false
-  set final-time 0
   set count-random-move-limit  30
   set exiting-door-limit 60
   set check-door-limit 100
@@ -86,37 +83,21 @@ to setup-people
   ]
 end
 
-;;get-time
-to-report get-time
-  ifelse is-running = true
-  [
-    report timer
-  ]
-  [
-    report final-time
-  ]
-end
-
 ;;go
 to go
 
-  ;;start timer
-  if is-running = false [
-    set is-running true
-    reset-timer
-  ]
 
-  ;;stop timer and simulation if there are not any people remaining
+
+  ;;simulation if there are not any people remaining
   if not any? people
   [
-    set final-time timer
-    set is-running false
     stop
   ]
 
   ask people
   [
 
+    ;;if [pcolor] of patch-here = blue [ output-print(word self " stepped on blue") ]
     ;; output-print(word self " " prev-patch " " pcolor " " [isDoor] of prev-patch)
 
     ;;set exiting-door if we stepped out of door
@@ -150,7 +131,7 @@ to go
             [
 
 
-              make-move-random 5
+              make-move-random 10
               if exiting-door > 0
               [
                 ;;output-print(word self " exiting door " exiting-door)
@@ -174,7 +155,7 @@ to go
                   ifelse (find-door = false)
                   [
                     ;;output-print(word self " random move")
-                    make-move-random 30
+                    make-move-random 15
                     set count-random-move count-random-move + 1
                     ;;reset visited-patches if we cannot find door
                     if count-random-move = count-random-move-limit
@@ -237,7 +218,7 @@ to go
       set color white
     ]
   ]
-
+  tick
 end
 
 ;;find-better-next-door
@@ -339,8 +320,10 @@ end
 
 ;;make random move
 to make-move-random [degree]
+  ;;output-print(word self "make random move")
   lt random degree
   rt random degree
+
   while [[pcolor] of patch-ahead 1 = blue]
   [
     lt random degree
@@ -537,6 +520,7 @@ to-report is-in-line-of-sight [patch-to]
 end
 
 to make-move [to-patch]
+  ;;output-print(word self "make move to " to-patch)
   face to-patch
   let moved true
 
@@ -573,17 +557,17 @@ to-report try-to-get-round
 end
 
 to-report select-side
-  if [pcolor] of patch-left-and-ahead 45 1 = blue [
+  if [pcolor] of patch-left-and-ahead 45 2 = blue [
     report -1
   ]
-  if [pcolor] of patch-right-and-ahead 45 1 = blue [
+  if [pcolor] of patch-right-and-ahead 45 2 = blue [
     report 1
   ]
 
   left 45
-  let left-overload count people in-cone 2 90
+  let left-overload count people in-cone 1 90
   right 90
-  let right-overload count people in-cone 2 90
+  let right-overload count people in-cone 1 90
   left 45
 
   ifelse left-overload < right-overload [
@@ -687,7 +671,7 @@ people-count
 people-count
 0
 100
-50.0
+100.0
 1
 1
 NIL
@@ -793,8 +777,8 @@ MONITOR
 318
 262
 363
-Timer [s]
-get-time
+Timer [ticks]
+ticks
 17
 1
 11
