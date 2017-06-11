@@ -1,5 +1,7 @@
 globals
 [
+  final-time
+  is-running
   count-random-move-limit
   exiting-door-limit
   is-stuck-limit
@@ -23,6 +25,7 @@ turtles-own
 patches-own [isDoor]
 
 to setup
+
   clear-globals
   clear-ticks
   clear-turtles
@@ -48,6 +51,8 @@ to setup-patches
   ]
 end
 to setup-globals
+  set is-running false
+  set final-time 0
   set count-random-move-limit  30
   set exiting-door-limit 60
   set is-stuck-limit 100
@@ -72,8 +77,27 @@ to setup-people
   ]
 end
 
+to-report get-time
+  ifelse is-running = true
+  [
+    report timer
+  ]
+  [
+    report final-time
+  ]
+end
 to go
-  if not any? people [ stop ]
+  if is-running = false [
+    set is-running true
+    reset-timer
+  ]
+
+  if not any? people
+  [
+    set final-time timer
+    set is-running false
+    stop
+  ]
 
   ask people
   [
@@ -668,10 +692,10 @@ OUTPUT
 11
 
 MONITOR
-57
-249
-114
-294
+13
+320
+70
+365
 Freed
 freed
 17
@@ -696,10 +720,10 @@ NIL
 1
 
 SLIDER
-42
-333
-214
-366
+23
+203
+195
+236
 max-pressure
 max-pressure
 0
@@ -709,6 +733,28 @@ max-pressure
 1
 NIL
 HORIZONTAL
+
+MONITOR
+87
+320
+144
+365
+Dead
+count corpses
+17
+1
+11
+
+MONITOR
+166
+318
+262
+363
+Timer [s]
+get-time
+17
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
