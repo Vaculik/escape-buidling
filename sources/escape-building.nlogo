@@ -473,6 +473,8 @@ to make-move [to-patch]
   face to-patch
   let moved true
 
+  lt random 10
+  rt random 10
   if not move-ahead [
     set moved try-to-get-round
   ]
