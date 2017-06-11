@@ -106,8 +106,8 @@ to go
             ifelse isDoor = true or exiting-door > 0
             [
 
-              let patch-to min-one-of patches with [ pcolor = brown] [distance myself]
-              make-move patch-to
+
+              make-move-random 5
               if exiting-door > 0
               [
                 ;;output-print(word self " exiting door " exiting-door)
@@ -280,6 +280,8 @@ to put-patch-neighbours [patch-to-visited]
       ]
 end
 to make-move-random [degree]
+  lt random degree
+  rt random degree
   while [[pcolor] of patch-ahead 1 = blue]
   [
     lt random degree
@@ -295,7 +297,7 @@ to-report move-to-door [door-color blacklist-patches]
 
   let patch-to min-one-of patches with [ pcolor = door-color and not member? self blacklist-patches][distance myself]
 
-  ifelse is-in-line-of-sight-random patch-to ((remainder (random 100) 3) + 2)
+  ifelse is-in-line-of-sight-random patch-to ((remainder (random 100) 2) + 3)
   [
     make-move patch-to
     ;;make-move-random 5
@@ -505,7 +507,7 @@ to-report select-side
   if [pcolor] of patch-left-and-ahead 45 1 = blue [
     report -1
   ]
-  if [pcolor] of patch-left-and-ahead 45 1 = blue [
+  if [pcolor] of patch-right-and-ahead 45 1 = blue [
     report 1
   ]
 
@@ -616,7 +618,7 @@ people-count
 people-count
 0
 100
-4.0
+50.0
 1
 1
 NIL
