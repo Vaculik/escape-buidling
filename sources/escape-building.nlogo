@@ -670,8 +670,8 @@ SLIDER
 people-count
 people-count
 0
-100
-100.0
+300
+300.0
 1
 1
 NIL
@@ -1125,10 +1125,21 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.0.1
+NetLogo 6.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
+<experiments>
+  <experiment name="experiment" repetitions="10" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <metric>count corpses</metric>
+    <steppedValueSet variable="people-count" first="50" step="5" last="300"/>
+    <enumeratedValueSet variable="max-pressure">
+      <value value="50"/>
+    </enumeratedValueSet>
+  </experiment>
+</experiments>
 @#$#@#$#@
 @#$#@#$#@
 default
