@@ -135,6 +135,7 @@ to go
               if exiting-door > 0
               [
                 ;;output-print(word self " exiting door " exiting-door)
+
                 set exiting-door exiting-door - 1
               ]
             ]
@@ -155,7 +156,7 @@ to go
                   ifelse (find-door = false)
                   [
                     ;;output-print(word self " random move")
-                    make-move-random 15
+                    make-move-random 10
                     set count-random-move count-random-move + 1
                     ;;reset visited-patches if we cannot find door
                     if count-random-move = count-random-move-limit
@@ -427,12 +428,12 @@ to-report is-in-line-of-sight-neighbours [parent-patch max-dist-of-neighbours]
 
   if parent-patch != nobody
   [
-    ;;output-print(word "checks neighbours" [pcolor] of parent-patch)
+    ;;output-print(word self "checks neighbours" [pcolor] of parent-patch)
     let curr-dist 1
     while [curr-dist <= max-dist-of-neighbours]
     [
       let patch-up patch [pxcor] of parent-patch ([pycor] of parent-patch + curr-dist)
-      if patch-up != nobody or [pcolor] of patch-up = [pcolor] of parent-patch
+      if patch-up != nobody and [pcolor] of patch-up = [pcolor] of parent-patch
       [
         if is-in-line-of-sight patch-up
         [
@@ -441,7 +442,7 @@ to-report is-in-line-of-sight-neighbours [parent-patch max-dist-of-neighbours]
       ]
 
       let patch-down patch [pxcor] of parent-patch ([pycor] of parent-patch - curr-dist)
-      if patch-down != nobody or [pcolor] of patch-down = [pcolor] of parent-patch
+      if patch-down != nobody and [pcolor] of patch-down = [pcolor] of parent-patch
       [
         if is-in-line-of-sight patch-down
         [
@@ -450,7 +451,7 @@ to-report is-in-line-of-sight-neighbours [parent-patch max-dist-of-neighbours]
       ]
 
       let patch-left patch ([pxcor] of parent-patch + curr-dist) [pycor] of parent-patch
-      if patch-left != nobody or [pcolor] of patch-left = [pcolor] of parent-patch
+      if patch-left != nobody and [pcolor] of patch-left = [pcolor] of parent-patch
       [
         if is-in-line-of-sight patch-left
         [
@@ -459,7 +460,7 @@ to-report is-in-line-of-sight-neighbours [parent-patch max-dist-of-neighbours]
       ]
 
       let patch-right patch ([pxcor] of parent-patch + curr-dist) [pycor] of parent-patch
-      if patch-right != nobody or [pcolor] of patch-right = [pcolor] of parent-patch
+      if patch-right != nobody and [pcolor] of patch-right = [pcolor] of parent-patch
       [
         if is-in-line-of-sight patch-right
         [
@@ -477,7 +478,7 @@ to-report is-in-line-of-sight [patch-to]
   if patch-to = nobody [
     report false
   ]
-
+;;output-print(word self " " [pcolor] of patch-to)
   let dist-of-patch (distancexy [pxcor] of patch-to [pycor] of patch-to)
   let dist 1
   let c color
@@ -507,7 +508,7 @@ to-report is-in-line-of-sight [patch-to]
           if pcolor = blue
           [
             set wall-count wall-count + 1
-            ;;output-print "is in line of sight"
+            ;;output-print (word "is in line of sight " wall-count)
           ]
         ]
       ]
@@ -515,7 +516,7 @@ to-report is-in-line-of-sight [patch-to]
     ]
     set dist dist + 1
   ]
- ;; output-print(word self " " wall-count " " [pcolor] of patch-to)
+
   ifelse wall-count > 0
   [
     report false
