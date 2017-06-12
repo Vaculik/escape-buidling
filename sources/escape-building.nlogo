@@ -147,7 +147,7 @@ to go2
             set visited-door-patches (list)
             if find-door-in-room patch-here []
             ;;if length door-patches = 0 [ output-print(word self " " door-patches) ]
-            let tmp filter [ i -> not member? i visited-patches ] door-patches
+            let tmp filter filter-by-visited door-patches
             ;;output-print(word self " " tmp)
             let tmp2 sort-by sort-by-color tmp
             ;;output-print(word self " " tmp2)
@@ -853,6 +853,10 @@ to-report sort-by-color [patch1 patch2]
     report pcolor1 > pcolor2
   ]
 
+end
+
+to-report filter-by-visited [p]
+  report not member? p visited-patches
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
