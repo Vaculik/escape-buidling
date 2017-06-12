@@ -57,9 +57,9 @@ end
 
 ;;setup-globals
 to setup-globals
-  set count-random-move-limit  30
-  set exiting-door-limit 60
-  set check-door-limit 100
+  set count-random-move-limit  60
+  set exiting-door-limit 70
+  set check-door-limit 80
 end
 
 ;;setup-people
@@ -193,6 +193,7 @@ to go
                   if is-in-line-of-sight next-door = false
                   [
                     set next-door nobody
+                    ;;set visited-patches (list patch-here)
                   ]
                   set move-steps 0
                 ]
@@ -340,13 +341,14 @@ to-report move-to-door [door-color blacklist-patches]
   ;;get nearest patch of door-color
   let patch-to min-one-of patches with [ pcolor = door-color and not member? self blacklist-patches][distance myself]
 
+  ;;output-print(word self " " patch-to " " [pcolor] of patch-to)
   ;;if random patch from nearest is in line of sight, set next door
-  ifelse is-in-line-of-sight-random patch-to ((remainder (random 100) 2) + 3)
+  ifelse is-in-line-of-sight patch-to ;;((remainder (random 100) 2) + 1)
   [
     make-move patch-to
     ;;make-move-random 5
     ;;output-print(word self " moves to " patch-to " with color " [pcolor] of patch-to)
-    ;;set next-door patch-to
+    set next-door patch-to
     report true
   ]
   ;;check all door neighbours patches if there are is sight
@@ -422,8 +424,10 @@ end
 ;;check if some neighbouring patch is in sight to the distance
 to-report is-in-line-of-sight-neighbours [parent-patch max-dist-of-neighbours]
 
+
   if parent-patch != nobody
   [
+    ;;output-print(word "checks neighbours" [pcolor] of parent-patch)
     let curr-dist 1
     while [curr-dist <= max-dist-of-neighbours]
     [
@@ -480,7 +484,8 @@ to-report is-in-line-of-sight [patch-to]
   let last-patch patch-here
   let wall-count 0
   face patch-to
-  while [dist <= dist-of-patch] [
+  while [dist <= dist-of-patch]
+  [
     let p patch-ahead dist
     ;; if we are looking diagonally across
     ;; a patch it is possible we'll get the
@@ -510,6 +515,7 @@ to-report is-in-line-of-sight [patch-to]
     ]
     set dist dist + 1
   ]
+ ;; output-print(word self " " wall-count " " [pcolor] of patch-to)
   ifelse wall-count > 0
   [
     report false
@@ -670,8 +676,8 @@ SLIDER
 people-count
 people-count
 0
-300
-300.0
+100
+40.0
 1
 1
 NIL
@@ -1125,21 +1131,10 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.0
+NetLogo 6.0.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
-<experiments>
-  <experiment name="experiment" repetitions="10" runMetricsEveryStep="false">
-    <setup>setup</setup>
-    <go>go</go>
-    <metric>count corpses</metric>
-    <steppedValueSet variable="people-count" first="50" step="5" last="300"/>
-    <enumeratedValueSet variable="max-pressure">
-      <value value="50"/>
-    </enumeratedValueSet>
-  </experiment>
-</experiments>
 @#$#@#$#@
 @#$#@#$#@
 default
