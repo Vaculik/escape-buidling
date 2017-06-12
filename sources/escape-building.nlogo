@@ -83,8 +83,17 @@ to setup-people
       set pressure 0
       set exiting-door 0
       set move-steps 0
-      set next-door nobody
+
       set prev-door (list)
+      set door-patches (list)
+            set visited-door-patches (list)
+            if find-door-in-room patch-here []
+            ;;if length door-patches = 0 [ output-print(word self " " door-patches) ]
+            let tmp filter filter-by-visited door-patches
+            ;;output-print(word self " " tmp)
+            let tmp2 sort-by sort-by-color tmp
+            set next-door item 0 tmp2
+
     ]
   ]
 end
