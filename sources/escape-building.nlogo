@@ -12,6 +12,7 @@ Breed [corpses corpse]
 
 turtles-own
 [
+
   move-steps ;;count steps, resets after being stuck (see is-stuck-limit global)
   next-door ;;next door to go to
   exiting-door ;;exiting-door counter (see exiting-door-limit global)
@@ -19,6 +20,9 @@ turtles-own
   visited-patches ;; list of visited-patches
   prev-patch ;; previous visited patch
   pressure ;; pressure
+  ;;;
+  door-patches
+  visited-door-patches
 ]
 patches-own
 [
@@ -45,7 +49,7 @@ end
 to setup-patches
   ask patches
   [
-   ifelse pcolor = red or pcolor = green or pcolor = yellow
+   ifelse pcolor = red or pcolor = green or pcolor = cyan
    [
       set is-door true
     ]
@@ -58,7 +62,7 @@ end
 ;;setup-globals
 to setup-globals
   set count-random-move-limit  60
-  set exiting-door-limit 70
+  set exiting-door-limit 10
   set check-door-limit 80
 end
 
@@ -83,6 +87,109 @@ to setup-people
   ]
 end
 
+to go2
+  ;;simulation if there are not any people remaining
+  if not any? people
+  [
+    stop
+  ]
+  ask people
+  [
+;;set exiting-door if we stepped out of door
+    if [is-door] of prev-patch = true
+    [
+     ;;output-print(word self " starts exiting")
+       set exiting-door exiting-door-limit
+    ]
+
+    ;;go outside of building (black patch)
+    ifelse pcolor = cyan
+    [
+      let patch-to min-one-of patches with [ pcolor = black] [distance myself]
+      make-move patch-to
+    ]
+    [
+      ;;if outside, person is freed
+      ifelse pcolor = black
+      [
+      set freed freed + 1
+      die
+      ]
+      [
+       ifelse is-door = true or exiting-door > 0
+       [
+          if next-door != nobody
+          [
+            face next-door
+            set next-door nobody
+          ]
+          make-move-random 10
+          if exiting-door > 0
+          [
+                ;;output-print(word self " exiting door " exiting-door)
+
+            set exiting-door exiting-door - 1
+          ]
+        ]
+        [
+          ifelse next-door = nobody
+          [
+            set door-patches (list)
+            set visited-door-patches (list)
+            if find-door-in-room patch-here []
+            if length door-patches = 0 [ output-print(word self " " door-patches) ]
+            let tmp filter [ i -> not member? i visited-patches ] door-patches
+            ;;output-print(word self " " tmp)
+            let tmp2 sort-by sort-by-color tmp
+            ;;output-print(word self " " tmp2)
+            ifelse length tmp2 = 0
+            [
+             set tmp2 sort-by sort-by-color door-patches
+              ifelse length tmp2 = 0
+              [
+                make-move-random 15
+                set count-random-move count-random-move  + 1
+              ]
+              [
+
+                                set next-door item 0 (tmp2)
+                make-move next-door
+                set count-random-move 0
+              ]
+
+            ]
+            [
+
+              set next-door item 0 (tmp2)
+              make-move next-door
+              set count-random-move 0
+            ]
+
+
+
+          ]
+          [
+            ifelse patch-here = next-door
+            [
+              set next-door nobody
+            ]
+            [
+              make-move next-door
+            ]
+
+          ]
+        ]
+      ]
+    ]
+
+
+    if not member? patch-here visited-patches
+    [
+      put-patch-to-visited patch-here
+    ]
+    set prev-patch patch-here
+  ]
+end
 ;;go
 to go
 
@@ -624,6 +731,61 @@ to import-from-file
   ]
   [ user-message "Import Canceled. File not found." ]
 end
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+to-report find-door-in-room [patch-room]
+
+  ifelse patch-room != nobody
+  [
+    ifelse not member? patch-room visited-door-patches
+    [
+      set visited-door-patches lput patch-room visited-door-patches
+      ifelse [pcolor] of patch-room = blue
+      [
+        report false
+      ]
+      [
+        ifelse [is-door] of patch-room = true
+        [
+          set door-patches lput patch-room door-patches
+          report true
+        ]
+        [
+
+          let patch-up patch [pxcor] of patch-room ([pycor] of patch-room + 1)
+          let result-up find-door-in-room patch-up
+          let patch-down patch [pxcor] of patch-room ([pycor] of patch-room - 1)
+          let result-down find-door-in-room patch-down
+          let patch-left patch ([pxcor] of patch-room - 1) [pycor] of patch-room
+          let result-left find-door-in-room patch-left
+          let patch-right patch ([pxcor] of patch-room + 1) [pycor] of patch-room
+          let result-right find-door-in-room patch-right
+          report result-up or result-down or result-left or result-down
+        ]
+      ]
+    ]
+    [
+      report false
+    ]
+  ]
+  [
+    report false
+  ]
+end
+
+to-report sort-by-color [patch1 patch2]
+  let pcolor1 [pcolor] of patch1
+  let pcolor2 [pcolor] of patch2
+  ifelse pcolor1 = pcolor2
+  [
+    report (distance patch1) < (distance patch2)
+  ]
+  [
+    report pcolor1 > pcolor2
+  ]
+
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
 286
@@ -678,7 +840,7 @@ people-count
 people-count
 0
 100
-40.0
+100.0
 1
 1
 NIL
@@ -707,7 +869,7 @@ BUTTON
 118
 125
 Go Step
-go
+go2
 NIL
 1
 T
@@ -742,7 +904,7 @@ BUTTON
 241
 125
 Go forever
-go
+go2
 T
 1
 T

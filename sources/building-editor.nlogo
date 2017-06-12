@@ -27,7 +27,7 @@ to draw
     [ draw-exit-sign-door ]
     ;; Exit - Final exit door that leads outside the building
     if current-tool = "Exit"
-    [ draw-boundary yellow ]
+    [ draw-boundary cyan ]
     ;; Normal Door
     if current-tool = "Normal Door"
     [ draw-boundary red ]
@@ -277,7 +277,7 @@ CHOOSER
 door-orientation
 door-orientation
 "Up" "Down" "Right" "Left"
-3
+0
 
 TEXTBOX
 21
