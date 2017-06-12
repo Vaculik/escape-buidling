@@ -23,6 +23,7 @@ turtles-own
   ;;;
   door-patches
   visited-door-patches
+  prev-door
 ]
 patches-own
 [
@@ -83,6 +84,7 @@ to setup-people
       set exiting-door 0
       set move-steps 0
       set next-door nobody
+      set prev-door (list)
     ]
   ]
 end
@@ -96,6 +98,10 @@ to go2
   ask people
   [
 ;;set exiting-door if we stepped out of door
+    if member? next-door prev-door
+    [
+     set visited-patches (list prev-door)
+    ]
     if [is-door] of prev-patch = true
     [
      ;;output-print(word self " starts exiting")
@@ -121,6 +127,9 @@ to go2
           if next-door != nobody
           [
             face next-door
+            set prev-door (list)
+            ;;output-print(word self " getting prev-door " )
+            put-patch-to-prev-door next-door
             set next-door nobody
           ]
           make-move-random 10
@@ -137,7 +146,7 @@ to go2
             set door-patches (list)
             set visited-door-patches (list)
             if find-door-in-room patch-here []
-            if length door-patches = 0 [ output-print(word self " " door-patches) ]
+            ;;if length door-patches = 0 [ output-print(word self " " door-patches) ]
             let tmp filter [ i -> not member? i visited-patches ] door-patches
             ;;output-print(word self " " tmp)
             let tmp2 sort-by sort-by-color tmp
@@ -182,13 +191,10 @@ to go2
       ]
     ]
 
-
-    if not member? patch-here visited-patches
-    [
-      put-patch-to-visited patch-here
-    ]
+    put-patch-to-visited patch-here
     set prev-patch patch-here
   ]
+  tick
 end
 ;;go
 to go
@@ -379,7 +385,6 @@ to put-patch-to-visited [patch-to-visited]
       [
         put-patch-neighbours patch-to-visited
       ]
-      set prev-patch patch-to-visited
     ]
 
   ]
@@ -389,6 +394,7 @@ end
 ;;put neighbouring patches of the same color to visited list
 to put-patch-neighbours [patch-to-visited]
 
+ ;; output-print(word self " blacklist patch " patch-to-visited " visited list")
    if not member? patch-to-visited visited-patches
   [
     set visited-patches lput patch-to-visited visited-patches
@@ -426,6 +432,68 @@ to put-patch-neighbours [patch-to-visited]
         ]
       ]
 end
+
+
+;;put patch to prev-door
+;;if its door put all neighbouring patches of the same color to prev-door as well
+to put-patch-to-prev-door [patch-to-visited]
+
+  ;;output-print(word self " is on " patch-to-visited " isDoor:" [isDoor] of patch-to-visited)
+
+    if not member? patch-to-visited prev-door
+    [
+      ;;output-print(word patch-to-visited " moved to visited")
+      if [is-door] of patch-to-visited = true
+      [
+        put-patch-neighbours-prev-door patch-to-visited
+      ]
+    ]
+
+
+
+end
+
+;;put neighbouring patches of the same color to prev-door list
+to put-patch-neighbours-prev-door [patch-to-visited]
+
+   if not member? patch-to-visited prev-door
+  [
+    set prev-door lput patch-to-visited prev-door
+  ]
+      let patch-up patch [pxcor] of patch-to-visited ([pycor] of patch-to-visited + 1)
+      if patch-up != nobody and [is-door] of patch-up = true
+      [
+        if not member? patch-up prev-door
+        [
+          put-patch-neighbours-prev-door patch-up
+        ]
+      ]
+      let patch-down patch ([pxcor] of patch-to-visited) ([pycor] of patch-to-visited - 1)
+      if patch-down != nobody and [is-door] of patch-down = true
+      [
+        if not member? patch-down prev-door
+        [
+          put-patch-neighbours-prev-door patch-down
+        ]
+      ]
+      let patch-left patch ([pxcor] of patch-to-visited - 1) ([pycor] of patch-to-visited)
+      if patch-left != nobody and [is-door] of patch-left = true
+      [
+        if not member? patch-left prev-door
+        [
+          put-patch-neighbours-prev-door patch-left
+        ]
+      ]
+      let patch-right patch ([pxcor] of patch-to-visited + 1) ([pycor] of patch-to-visited)
+      if patch-right != nobody and [is-door] of patch-right = true
+      [
+        if not member? patch-right prev-door
+        [
+          put-patch-neighbours-prev-door patch-right
+        ]
+      ]
+end
+
 
 ;;make random move
 to make-move-random [degree]
