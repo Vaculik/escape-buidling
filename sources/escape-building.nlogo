@@ -41,9 +41,8 @@ to setup
   clear-output
   reset-ticks
   setup-globals
-  setup-people
   setup-patches
-
+  setup-people
 end
 
 ;;setup patches variables
@@ -202,6 +201,11 @@ to go2
 
     put-patch-to-visited patch-here
     set prev-patch patch-here
+
+    set pressure 0
+    if breed != corpses [
+      set color white
+    ]
   ]
   tick
 end
@@ -921,7 +925,7 @@ people-count
 people-count
 0
 100
-100.0
+53.0
 1
 1
 NIL
@@ -1375,7 +1379,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.0.1
+NetLogo 6.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
