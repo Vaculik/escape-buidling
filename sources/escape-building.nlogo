@@ -41,8 +41,9 @@ to setup
   clear-output
   reset-ticks
   setup-globals
-  setup-people
   setup-patches
+  setup-people
+
 
 end
 
@@ -90,7 +91,8 @@ to setup-people
             if find-door-in-room patch-here []
             ;;if length door-patches = 0 [ output-print(word self " " door-patches) ]
             let tmp filter filter-by-visited door-patches
-            ;;output-print(word self " " tmp)
+           ;; output-print(word self " " tmp)
+      ;;output-print(word self " " door-patches)
             let tmp2 sort-by sort-by-color tmp
             set next-door item 0 tmp2
 
@@ -921,7 +923,7 @@ people-count
 people-count
 0
 100
-100.0
+300.0
 1
 1
 NIL
@@ -1379,6 +1381,19 @@ NetLogo 6.0.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
+<experiments>
+  <experiment name="experiment" repetitions="10" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go2</go>
+    <metric>freed</metric>
+    <metric>count corpses</metric>
+    <metric>ticks</metric>
+    <steppedValueSet variable="people-count" first="50" step="25" last="300"/>
+    <enumeratedValueSet variable="max-pressure">
+      <value value="50"/>
+    </enumeratedValueSet>
+  </experiment>
+</experiments>
 @#$#@#$#@
 @#$#@#$#@
 default
