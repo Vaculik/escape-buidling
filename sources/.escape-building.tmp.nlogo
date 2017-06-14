@@ -44,11 +44,11 @@ to setup
   clear-output
   reset-ticks
 
-  setup-globals
-  setup-patches
-  setup-people
+  ;setup-globals
+  ;setup-patches
+  ;setup-people
 
-  ;setup-people-one-room
+  setup-people-one-room
 end
 
 ;;setup patches variables
@@ -1044,7 +1044,7 @@ BUTTON
 241
 125
 Go forever
-go-one-room
+go2
 T
 1
 T
@@ -1452,7 +1452,7 @@ NetLogo 6.0
   </experiment>
   <experiment name="one-room" repetitions="10" runMetricsEveryStep="false">
     <setup>setup</setup>
-    <go>go</go>
+    <go>go-one-room</go>
     <metric>count corpses</metric>
     <steppedValueSet variable="people-count" first="50" step="5" last="300"/>
     <enumeratedValueSet variable="max-pressure">
