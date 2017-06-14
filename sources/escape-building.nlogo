@@ -1,8 +1,6 @@
 globals
 [
-  count-random-move-limit ;;how many consecutively random moves resets visited-patches (no door find yet)
   exiting-door-limit ;;how many steps is person exiting door
-  check-door-limit ;; how many steps we check if next-door is still in sight
   freed ;;count freed people
   current-tool door-orientation ;; variables needed to be compatible with editor (import without errors)
 ]
@@ -13,10 +11,8 @@ Breed [corpses corpse]
 turtles-own
 [
 
-  move-steps ;;count steps, resets after being stuck (see is-stuck-limit global)
   next-door ;;next door to go to
   exiting-door ;;exiting-door counter (see exiting-door-limit global)
-  count-random-move ;; count-random-move counter (see count-random-move-limit global)
   visited-patches ;; list of visited-patches
   prev-patch ;; previous visited patch
   pressure ;; pressure
@@ -67,9 +63,7 @@ end
 
 ;;setup-globals
 to setup-globals
-  set count-random-move-limit  60
   set exiting-door-limit 10
-  set check-door-limit 80
 end
 
 ;;setup-people
@@ -87,7 +81,6 @@ to setup-people
       set prev-patch patch-here
       set pressure 0
       set exiting-door 0
-      set move-steps 0
 
       set prev-door (list)
       set door-patches (list)
@@ -104,7 +97,7 @@ to setup-people
   ]
 end
 
-to go2
+to go
   ;;simulation if there are not any people remaining
   if not any? people
   [
@@ -112,11 +105,13 @@ to go2
   ]
   ask people
   [
-;;set exiting-door if we stepped out of door
+
+    ;;if we found next-door as prev-door we reset visited patches
     if member? next-door prev-door
     [
      set visited-patches (list prev-door)
     ]
+    ;;set exiting-door if we stepped out of door
     if [is-door] of prev-patch = true
     [
      ;;output-print(word self " starts exiting")
@@ -137,6 +132,7 @@ to go2
       die
       ]
       [
+        ;;in door or exiting one
        ifelse is-door = true or exiting-door > 0
        [
           if next-door != nobody
@@ -156,43 +152,50 @@ to go2
           ]
         ]
         [
+          ;;find best next-door
           ifelse next-door = nobody
           [
+
+            ;;clear patches
             set door-patches (list)
             set visited-door-patches (list)
+            ;;find list of door patches from room
             if find-door-in-room patch-here []
             ;;if length door-patches = 0 [ output-print(word self " " door-patches) ]
+            ;;filter them by visited-patches
             let tmp filter filter-by-visited door-patches
             ;;output-print(word self " " tmp)
+            ;;sot them by priority (color)
             let tmp2 sort-by sort-by-color tmp
             ;;output-print(word self " " tmp2)
+
+            ;;if no such door exists we use all found door patches
             ifelse length tmp2 = 0
             [
              set tmp2 sort-by sort-by-color door-patches
               ifelse length tmp2 = 0
               [
                 make-move-random 15
-                set count-random-move count-random-move  + 1
               ]
               [
 
-                                set next-door item 0 (tmp2)
+               set next-door item 0 (tmp2)
                 make-move next-door
-                set count-random-move 0
               ]
 
             ]
             [
 
+              ;;select next-door  first item from sorted list
               set next-door item 0 (tmp2)
               make-move next-door
-              set count-random-move 0
             ]
 
 
 
           ]
           [
+            ;;reset next-door if we reached the destination next-door
             ifelse patch-here = next-door
             [
               set next-door nobody
@@ -216,178 +219,7 @@ to go2
   ]
   tick
 end
-;;go
-to go
 
-
-
-  ;;simulation if there are not any people remaining
-  if not any? people
-  [
-    stop
-  ]
-
-  ask people
-  [
-
-    ;;if [pcolor] of patch-here = blue [ output-print(word self " stepped on blue") ]
-    ;; output-print(word self " " prev-patch " " pcolor " " [isDoor] of prev-patch)
-
-    ;;set exiting-door if we stepped out of door
-    if [is-door] of prev-patch = true
-    [
-    ;; output-print(word self " is exiting")
-       set exiting-door exiting-door-limit
-    ]
-
-    ;;go outside of building (black patch)
-    ifelse pcolor = yellow
-    [
-      let patch-to min-one-of patches with [ pcolor = black] [distance myself]
-      make-move patch-to
-    ]
-    [
-      ;;if outside, person is freed
-      ifelse pcolor = black
-      [
-      set freed freed + 1
-      die
-      ]
-
-    [
-        if patch-ahead 1 != nobody
-        [
-
-
-          ;;if person is in door or is exiting door go straight
-            ifelse is-door = true or exiting-door > 0
-            [
-
-
-              make-move-random 10
-              if exiting-door > 0
-              [
-                ;;output-print(word self " exiting door " exiting-door)
-
-                set exiting-door exiting-door - 1
-              ]
-            ]
-            [
-            ;;we have not found door to go to yet
-            ;;find nearest door by priority (yellow, green, red) if not found, go random
-            ifelse next-door = nobody
-            [
-
-              let find-door (move-to-door yellow visited-patches)
-
-              ifelse (find-door = false)
-              [
-                set find-door (move-to-door green visited-patches)
-                ifelse (find-door = false)
-                [
-                  set find-door (move-to-door red visited-patches)
-                  ifelse (find-door = false)
-                  [
-                    ;;output-print(word self " random move")
-                    make-move-random 10
-                    set count-random-move count-random-move + 1
-                    ;;reset visited-patches if we cannot find door
-                    if count-random-move = count-random-move-limit
-                    [
-                      set visited-patches (list)
-                      set prev-patch patch-here
-                    ]
-                  ]
-                  [
-                    set count-random-move 0
-                  ]
-                ]
-                [
-                  set count-random-move 0
-                ]
-              ]
-              [
-                set count-random-move 0
-              ]
-            ]
-            ;;we have found next-door
-            [
-              ;;output-print(word self " is door " [isDoor] of next-door)
-
-              ;;try to find better door (better-door priority > next-door priority)
-              if find-better-next-door = false
-              [
-                ;;output-print(word self " found better door " next-door)
-                make-move next-door
-                ;;make-move-random 15
-
-                ;;checks if the door is still in sight periodically
-                if move-steps > check-door-limit
-                [
-                  if is-in-line-of-sight next-door = false
-                  [
-                    set next-door nobody
-                    ;;set visited-patches (list patch-here)
-                  ]
-                  set move-steps 0
-                ]
-
-              ]
-              ;;we got to the destination, reset next-door
-              if patch-here = next-door
-              [
-                set next-door nobody
-              ]
-            ]
-          ]
-
-          ]
-          put-patch-to-visited patch-here
-
-        ]
-
-    ]
-
-    set pressure 0
-    if breed != corpses [
-      set color white
-    ]
-  ]
-  tick
-end
-
-;;find-better-next-door
-;;finds door with better priory
-to-report find-better-next-door
-  if [pcolor] of next-door = yellow
-  [
-    report false
-  ]
-  let find-door (move-to-door yellow visited-patches)
-  ifelse (find-door = false)
-  [
-     if [pcolor] of next-door = green
-      [
-       report false
-      ]
-    set find-door (move-to-door green visited-patches)
-    ifelse (find-door = false)
-    [
-      if [pcolor] of next-door = red
-      [
-       report false
-      ]
-      report move-to-door red visited-patches
-    ]
-    [
-       report true
-    ]
-  ]
-  [
-     report true
-  ]
-
-end
 
 ;;put patch to visited
 ;;if its door put all neighbouring patches of the same color to visited as well
@@ -515,7 +347,7 @@ to put-patch-neighbours-prev-door [patch-to-visited]
 end
 
 
-;;make random move
+;;make random move (used if there is no destination)
 to make-move-random [degree]
   ;;output-print(word self "make random move")
   lt random degree
@@ -527,202 +359,11 @@ to make-move-random [degree]
     rt random degree
   ]
   fd 0.05
-  set move-steps move-steps + 1
 end
 
 
-;;move-to-door if is in sight
-to-report move-to-door [door-color blacklist-patches]
 
-  ;;get nearest patch of door-color
-  let patch-to min-one-of patches with [ pcolor = door-color and not member? self blacklist-patches][distance myself]
-
-  ;;output-print(word self " " patch-to " " [pcolor] of patch-to)
-  ;;if random patch from nearest is in line of sight, set next door
-  ifelse is-in-line-of-sight patch-to ;;((remainder (random 100) 2) + 1)
-  [
-    make-move patch-to
-    ;;make-move-random 5
-    ;;output-print(word self " moves to " patch-to " with color " [pcolor] of patch-to)
-    set next-door patch-to
-    report true
-  ]
-  ;;check all door neighbours patches if there are is sight
-  [
-    ifelse is-in-line-of-sight-neighbours patch-to 3
-    [
-      make-move patch-to
-      ;;make-move-random 5
-      ;;output-print(word self " moves to " patch-to " with color " [pcolor] of patch-to)
-      set next-door patch-to
-      report true
-    ]
-    [
-      report false
-    ]
-
-  ]
-
-end
-
-;;check if raandom patch from parent-patch is in sight
-;;we want something else then nearest patch
-to-report is-in-line-of-sight-random [parent-patch random-dist]
-
- ;; output-print(word self " random " random-dist)
-  if parent-patch != nobody
-  [
-
-      let patch-up patch [pxcor] of parent-patch ([pycor] of parent-patch + random-dist)
-    if patch-up != nobody and [pcolor] of patch-up = [pcolor] of parent-patch and [is-door] of patch-up
-      [
-        if is-in-line-of-sight patch-up
-        [
-          set next-door patch-up
-          report true
-        ]
-      ]
-
-      let patch-down patch [pxcor] of parent-patch ([pycor] of parent-patch - random-dist)
-      if patch-down != nobody and [pcolor] of patch-down = [pcolor] of parent-patch and [is-door] of patch-down
-      [
-        if is-in-line-of-sight patch-down
-        [
-          set next-door patch-down
-          report true
-        ]
-      ]
-
-      let patch-left patch ([pxcor] of parent-patch + random-dist) [pycor] of parent-patch
-      if patch-left != nobody and [pcolor] of patch-left = [pcolor] of parent-patch and [is-door] of patch-left
-      [
-        if is-in-line-of-sight patch-left
-        [
-          set next-door patch-left
-          report true
-        ]
-      ]
-
-      let patch-right patch ([pxcor] of parent-patch + random-dist) [pycor] of parent-patch
-      if patch-right != nobody and [pcolor] of patch-right = [pcolor] of parent-patch and [is-door] of patch-right
-      [
-        if is-in-line-of-sight patch-right
-        [
-          set next-door patch-right
-          report true
-        ]
-      ]
-
-  ]
-  report false
-end
-
-;;check if some neighbouring patch is in sight to the distance
-to-report is-in-line-of-sight-neighbours [parent-patch max-dist-of-neighbours]
-
-
-  if parent-patch != nobody
-  [
-    ;;output-print(word self "checks neighbours" [pcolor] of parent-patch)
-    let curr-dist 1
-    while [curr-dist <= max-dist-of-neighbours]
-    [
-      let patch-up patch [pxcor] of parent-patch ([pycor] of parent-patch + curr-dist)
-      if patch-up != nobody and [pcolor] of patch-up = [pcolor] of parent-patch
-      [
-        if is-in-line-of-sight patch-up
-        [
-          report true
-        ]
-      ]
-
-      let patch-down patch [pxcor] of parent-patch ([pycor] of parent-patch - curr-dist)
-      if patch-down != nobody and [pcolor] of patch-down = [pcolor] of parent-patch
-      [
-        if is-in-line-of-sight patch-down
-        [
-          report true
-        ]
-      ]
-
-      let patch-left patch ([pxcor] of parent-patch + curr-dist) [pycor] of parent-patch
-      if patch-left != nobody and [pcolor] of patch-left = [pcolor] of parent-patch
-      [
-        if is-in-line-of-sight patch-left
-        [
-          report true
-        ]
-      ]
-
-      let patch-right patch ([pxcor] of parent-patch + curr-dist) [pycor] of parent-patch
-      if patch-right != nobody and [pcolor] of patch-right = [pcolor] of parent-patch
-      [
-        if is-in-line-of-sight patch-right
-        [
-          report true
-        ]
-      ]
-      set curr-dist curr-dist + 1
-    ]
-  ]
-  report false
-end
-
-;;check if patch is in sight (no wall between)
-to-report is-in-line-of-sight [patch-to]
-  if patch-to = nobody [
-    report false
-  ]
-;;output-print(word self " " [pcolor] of patch-to)
-  let dist-of-patch (distancexy [pxcor] of patch-to [pycor] of patch-to)
-  let dist 1
-  let c color
-  let last-patch patch-here
-  let wall-count 0
-  face patch-to
-  while [dist <= dist-of-patch]
-  [
-    let p patch-ahead dist
-    ;; if we are looking diagonally across
-    ;; a patch it is possible we'll get the
-    ;; same patch for distance x and x + 1
-    ;; but we don't need to check again.
-    if p != last-patch [
-      ask p
-      [
-        ;;if green door we do not want red between too (it is wrong direction of door)
-        ifelse [pcolor] of patch-to = green
-        [
-          if pcolor = blue or pcolor = red
-          [
-            set wall-count wall-count + 1
-            ;;output-print "is in line of sight"
-          ]
-        ]
-        [
-          if pcolor = blue
-          [
-            set wall-count wall-count + 1
-            ;;output-print (word "is in line of sight " wall-count)
-          ]
-        ]
-      ]
-      set last-patch p
-    ]
-    set dist dist + 1
-  ]
-
-  ifelse wall-count > 0
-  [
-    report false
-  ]
-  [
-    report true
-  ]
-end
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
+;;find all door patches in room and put them in list
 to-report find-door-in-room [patch-room]
 
   ifelse patch-room != nobody
@@ -763,6 +404,7 @@ to-report find-door-in-room [patch-room]
   ]
 end
 
+;;sort reporter for list (sort by color, then distance)
 to-report sort-by-color [patch1 patch2]
   let pcolor1 [pcolor] of patch1
   let pcolor2 [pcolor] of patch2
@@ -776,6 +418,7 @@ to-report sort-by-color [patch1 patch2]
 
 end
 
+;;filter reporter for list
 to-report filter-by-visited [p]
   report not member? p visited-patches
 end
@@ -815,7 +458,6 @@ to make-move [to-patch]
     face to-patch
     push-people-ahead
   ]
-  set move-steps move-steps + 1
 end
 
 to-report move-ahead
@@ -980,7 +622,7 @@ people-count
 people-count
 0
 300
-300.0
+65.0
 1
 1
 NIL
@@ -1009,7 +651,7 @@ BUTTON
 118
 125
 Go Step
-go2
+go\n
 NIL
 1
 T
@@ -1044,7 +686,7 @@ BUTTON
 241
 125
 Go forever
-go-one-room
+go
 T
 1
 T
@@ -1434,7 +1076,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.0
+NetLogo 6.0.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
